@@ -52,5 +52,5 @@ export const CATEGORIES_DEFAULT = [
   { id: '3', name: 'Diseño', slug: 'diseno' },
   { id: '4', name: 'Limpieza', slug: 'limpieza' },
   { id: '5', name: 'Mantenimiento', slug: 'mantenimiento' },
-  { id: '6', name: 'Educación', slug: 'educacion' },
+  { id: '6', name: 'Otros', slug: 'otros' },
 ];

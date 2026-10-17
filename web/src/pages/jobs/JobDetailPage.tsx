@@ -1,8 +1,9 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ArrowLeft, CalendarDays, MapPin, Send, Users, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
@@ -18,8 +19,6 @@ interface JobDetail {
   budgetMax: number;
   deadlineDate: string;
   locationAddress: string;
-  locationLat: number;
-  locationLng: number;
   status: string;
   publisherId: string;
   publisher?: {
@@ -100,10 +99,10 @@ export default function JobDetailPage() {
   if (isLoading) {
     return (
       <div className="card animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-3/4 mb-6" />
-        <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-        <div className="h-4 bg-gray-200 rounded w-2/3 mb-6" />
-        <div className="h-32 bg-gray-200 rounded" />
+        <div className="h-8 bg-line rounded w-3/4 mb-6" />
+        <div className="h-4 bg-line rounded w-1/2 mb-2" />
+        <div className="h-4 bg-line rounded w-2/3 mb-6" />
+        <div className="h-32 bg-line rounded" />
       </div>
     );
   }
@@ -111,7 +110,7 @@ export default function JobDetailPage() {
   if (!job) {
     return (
       <div className="card text-center">
-        <p className="text-gray-600">Trabajo no encontrado</p>
+        <p className="text-ink-soft">Trabajo no encontrado</p>
         <Link to="/trabajos/buscar" className="btn-primary mt-4">
           Volver a buscar
         </Link>
@@ -123,13 +122,14 @@ export default function JobDetailPage() {
     <div className="space-y-6">
       <Link
         to="/trabajos/buscar"
-        className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600"
+        className="inline-flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-ink"
       >
-        ← Volver a resultados
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Volver a resultados
       </Link>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-12 space-y-4 lg:col-span-8">
           <div className="card">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
               <div>
@@ -137,108 +137,111 @@ export default function JobDetailPage() {
                   {job.category && (
                     <span className="badge-blue">{job.category.name}</span>
                   )}
-                  <span className={`badge ${
-                    job.status === 'ABIERTO' ? 'badge-green' :
-                    job.status === 'EN_PROGRESO' ? 'badge-blue' :
-                    job.status === 'FINALIZADO' ? 'badge-gray' : 'badge-red'
-                  }`}>
+                  <span className="badge">
                     {job.status}
                   </span>
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
+                <h1 className="text-lg font-semibold text-ink">{job.title}</h1>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-primary-600">
+                <p className="text-lg font-semibold text-ink">
+                  <Wallet className="mr-1 inline h-4 w-4 text-accent-500" aria-hidden="true" />
                   ${job.budgetMin} - ${job.budgetMax}
                 </p>
-                <p className="text-sm text-gray-500">Presupuesto estimado</p>
+                <p className="text-sm text-muted">Presupuesto estimado</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 pb-6 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-xl">
-                  📍
-                </div>
+            <div className="grid grid-cols-12 gap-3 border-b border-line pb-5 sm:gap-4">
+              <div className="col-span-12 sm:col-span-6">
                 <div>
-                  <p className="text-xs text-gray-500">Ubicación</p>
-                  <p className="text-sm font-medium text-gray-900">{job.locationAddress}</p>
+                  <p className="flex items-center gap-1.5 text-[13px] text-muted">
+                    <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                    Ubicación
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-ink-mid">{job.locationAddress}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-xl">
-                  ⏰
-                </div>
+              <div className="col-span-12 sm:col-span-6">
                 <div>
-                  <p className="text-xs text-gray-500">Fecha límite</p>
-                  <p className="text-sm font-medium text-gray-900">{formatDate(job.deadlineDate)}</p>
+                  <p className="flex items-center gap-1.5 text-[13px] text-muted">
+                    <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                    Fecha límite
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-ink-mid">{formatDate(job.deadlineDate)}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Descripción</h2>
-              <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+              <h2 className="mb-3 text-lg font-semibold text-ink">Descripción</h2>
+              <div className="whitespace-pre-wrap leading-relaxed text-ink-soft">
                 {job.description}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="col-span-12 space-y-4 lg:col-span-4">
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Publicado por</h2>
+            <h2 className="mb-4 text-lg font-semibold text-ink">Publicado por</h2>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-primary-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-500 text-xl font-semibold text-white">
                 {job.publisher?.fullName?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900">{job.publisher?.fullName || 'Usuario'}</p>
-                {job.publisher?.companyName && (
-                  <p className="text-sm text-primary-600">{job.publisher.companyName}</p>
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-ink">{job.publisher?.fullName || 'Usuario'}</p>
+                {(job.publisher?.companyName || job.publisher?.fullName) && (
+                  <p className="text-sm font-medium text-ink-soft">{job.publisher.companyName || job.publisher.fullName}</p>
                 )}
                 {job.publisher?.bio && (
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{job.publisher.bio}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">{job.publisher.bio}</p>
                 )}
               </div>
             </div>
           </div>
 
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Acciones</h2>
+            <h2 className="mb-4 text-lg font-semibold text-ink">Acciones</h2>
 
             {isPublisher ? (
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="mb-2 text-sm text-ink-soft">
                   Este trabajo fue publicado por ti.
                 </p>
                 <button
                   onClick={() => navigate(`/trabajos/${job.id}/editar`)}
                   className="btn-secondary w-full"
                 >
-                  ✏️ Editar trabajo
+                  Editar trabajo
                 </button>
                 <Link
                   to={`/mis-publicaciones/${job.id}/postulantes`}
                   className="btn-primary w-full"
                 >
-                  👥 Gestionar postulantes
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  Gestionar postulantes
                 </Link>
               </div>
             ) : userApplication ? (
               <div className="space-y-3">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="mb-2 text-sm text-ink-soft">
                   Estado de tu postulación:
                 </p>
-                <span className={`w-full py-2 text-center block badge text-sm ${
-                  userApplication.status === 'PENDIENTE' ? 'badge-yellow' :
-                  userApplication.status === 'ACEPTADA' ? 'badge-green' : 'badge-red'
-                }`}>
-                  {userApplication.status === 'PENDIENTE' ? '⏳ Pendiente' :
-                   userApplication.status === 'ACEPTADA' ? '✅ Aceptada' : '❌ Rechazada'}
-                </span>
+                <p
+                  className={`rounded-lg border px-3 py-2 text-center text-sm font-medium ${
+                    userApplication.status === 'ACEPTADA'
+                      ? 'border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400'
+                      : userApplication.status === 'RECHAZADA'
+                        ? 'border-red-300 text-red-700 dark:border-red-800 dark:text-red-400'
+                        : 'border-line-strong text-ink-soft'
+                  }`}
+                >
+                  {userApplication.status === 'PENDIENTE' ? 'Pendiente' :
+                   userApplication.status === 'ACEPTADA' ? 'Aceptada' : 'Rechazada'}
+                </p>
                 {userApplication.status === 'ACEPTADA' && (
-                  <p className="text-sm text-green-700 bg-green-50 p-3 rounded-lg">
+                  <p className="rounded-lg border border-line p-3 text-sm text-ink-soft">
                     ¡Felicidades! El publicante aceptó tu postulación. Pronto te contactarán.
                   </p>
                 )}
@@ -249,14 +252,15 @@ export default function JobDetailPage() {
                   onClick={() => setApplyModalOpen(true)}
                   className="btn-primary w-full"
                 >
-                  🚀 Postularme
+                  <Send className="h-4 w-4" aria-hidden="true" />
+                  Postularme
                 </button>
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-center text-xs text-muted">
                   Al postularte, el publicante verá tu perfil y mensaje.
                 </p>
               </div>
             ) : (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-ink-soft">
                 Este trabajo ya no está abierto a postulaciones.
               </div>
             )}
@@ -265,14 +269,15 @@ export default function JobDetailPage() {
       </div>
 
       {applyModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-            <div className="p-6 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg border border-line bg-card">
+            <div className="border-b border-line p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Postularme al trabajo</h3>
+                <h3 className="text-lg font-semibold text-ink">Postularme al trabajo</h3>
                 <button
                   onClick={() => setApplyModalOpen(false)}
-                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+                  aria-label="Cerrar"
+                  className="rounded-lg p-1 text-muted transition-colors hover:bg-subtle hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 >
                   ✕
                 </button>
@@ -288,7 +293,7 @@ export default function JobDetailPage() {
                   placeholder="Cuéntale al publicante por qué eres la persona ideal para este trabajo..."
                 />
                 {errors.message && (
-                  <p className="text-red-600 text-sm mt-1">{errors.message.message}</p>
+                  <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.message.message}</p>
                 )}
               </div>
               <div className="flex gap-3 pt-2">

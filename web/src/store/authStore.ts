@@ -20,8 +20,6 @@ export interface User {
   experienceYears?: number | null;
   skills?: string[];
   locationAddress?: string | null;
-  locationLat?: number | null;
-  locationLng?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }

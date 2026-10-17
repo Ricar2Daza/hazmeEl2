@@ -2,20 +2,29 @@ import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Text, Button, Chip } from 'react-native-paper';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { COLORS, APPLICATION_STATUS_COLORS } from '../constants';
 import { applicationsApi, jobsApi } from '../lib/axios';
 import { ApplicationCard, EmptyState, AppSnackbar, SnackState } from '../components/Shared';
-import type { Application } from '../types';
+import type { Application, Job } from '../types';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 type RProps = RouteProp<RootStackParamList, 'ManageApplicants'>;
 
 const GestionarPostulantesScreen: React.FC = () => {
   const route = useRoute<RProps>();
+  const navigation = useNavigation<any>();
   const { jobId } = route.params;
   const queryClient = useQueryClient();
   const [snack, setSnack] = useState<SnackState>({ visible: false, message: '', type: 'info' });
+
+  const { data: job } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: async () => {
+      const response = await jobsApi.getById(jobId);
+      return response.data.data as Job;
+    },
+  });
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['job', jobId, 'applications'],
@@ -30,6 +39,7 @@ const GestionarPostulantesScreen: React.FC = () => {
     onSuccess: () => {
       setSnack({ visible: true, message: 'Postulación aceptada', type: 'success' });
       queryClient.invalidateQueries({ queryKey: ['job', jobId, 'applications'] });
+      queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       queryClient.invalidateQueries({ queryKey: ['applications', 'mine'] });
     },
     onError: (e: any) => setSnack({ visible: true, message: e?.response?.data?.message || 'Error', type: 'error' }),
@@ -78,17 +88,25 @@ const GestionarPostulantesScreen: React.FC = () => {
           <ApplicationCard
             application={item}
             actions={
-              <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ gap: 8 }}>
+                <Button
+                  mode="outlined"
+                  icon="message-outline"
+                  onPress={() => navigation.navigate('Chat', { applicationId: item.id })}
+                >
+                  Abrir chat
+                </Button>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Button
                   mode="contained"
                   compact
                   buttonColor={COLORS.success}
                   loading={acceptMut.isPending}
-                  disabled={item.status !== 'PENDIENTE' || acceptMut.isPending}
+                  disabled={item.status !== 'PENDIENTE' || job?.status !== 'ABIERTO' || acceptMut.isPending}
                   style={{ flex: 1, borderRadius: 10 }}
                   onPress={() => confirmAccept(item.id)}
                 >
-                  Aceptar
+                  {item.status === 'ACEPTADA' ? 'Elegido' : job?.status !== 'ABIERTO' ? 'Trabajo asignado' : 'Aceptar'}
                 </Button>
                 <Button
                   mode="outlined"
@@ -101,6 +119,7 @@ const GestionarPostulantesScreen: React.FC = () => {
                 >
                   Rechazar
                 </Button>
+                </View>
               </View>
             }
           />

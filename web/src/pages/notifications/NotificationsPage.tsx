@@ -1,14 +1,15 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Bell, CheckCheck } from 'lucide-react';
 import api from '@/lib/axios';
 import { useNotificationStore, Notification } from '@/store/notificationStore';
 
-const typeIcons: Record<string, string> = {
-  NEW_APPLICATION: '📨',
-  APPLICATION_ACCEPTED: '✅',
-  APPLICATION_REJECTED: '❌',
-  JOB_UPDATED: '📝',
+const typeLabels: Record<string, string> = {
+  NEW_APPLICATION: 'Postulación',
+  APPLICATION_ACCEPTED: 'Aceptada',
+  APPLICATION_REJECTED: 'Rechazada',
+  JOB_UPDATED: 'Trabajo',
 };
 
 export default function NotificationsPage() {
@@ -66,10 +67,10 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notificaciones</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-semibold text-ink">Notificaciones</h1>
+          <p className="mt-1 text-ink-soft">
             {unreadCount > 0
               ? `Tienes ${unreadCount} notificacione${unreadCount !== 1 ? 's' : ''} sin leer`
               : 'No tienes notificaciones sin leer'}
@@ -81,7 +82,8 @@ export default function NotificationsPage() {
             disabled={markAllMutation.isPending || unreadCount === 0}
             className="btn-secondary"
           >
-            ✓ Marcar todas leídas
+            <CheckCheck className="h-4 w-4" aria-hidden="true" />
+            Marcar todas leídas
           </button>
         )}
       </div>
@@ -91,20 +93,20 @@ export default function NotificationsPage() {
           {[...Array(5)].map((_, i) => (
             <div key={i} className="card animate-pulse">
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                <div className="w-10 h-10 bg-line rounded-full" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="h-4 bg-line rounded w-3/4" />
+                  <div className="h-3 bg-line rounded w-1/2" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="card text-center py-16">
-          <p className="text-6xl mb-4">🔔</p>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay notificaciones</h3>
-          <p className="text-gray-600 max-w-md mx-auto mb-6">
+        <div className="card py-16 text-center">
+          <Bell className="mx-auto mb-4 h-10 w-10 text-muted" aria-hidden="true" />
+          <h3 className="mb-2 text-lg font-semibold text-ink">No hay notificaciones</h3>
+          <p className="mx-auto mb-6 max-w-md text-ink-soft">
             Aquí verás novedades sobre tus publicaciones y postulaciones.
           </p>
           <Link to="/trabajos/buscar" className="btn-primary">
@@ -117,34 +119,36 @@ export default function NotificationsPage() {
             <div
               key={notif.id}
               onClick={() => handleClick(notif)}
-              className={`card cursor-pointer transition-colors ${
-                !notif.read ? 'bg-blue-50/50 border-primary-100' : 'bg-white'
-              } hover:bg-gray-50`}
+              className={`card cursor-pointer transition-colors hover:bg-subtle ${
+                !notif.read ? 'border-l-2 border-l-accent-500' : ''
+              }`}
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-xl flex-shrink-0">
-                  {typeIcons[notif.type] || '📢'}
-                </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className={`font-medium ${!notif.read ? 'text-gray-900' : 'text-gray-700'}`}>
-                      {notif.title}
-                    </p>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium uppercase text-muted">
+                        {typeLabels[notif.type] || 'Aviso'}
+                      </p>
+                      <p className={`mt-0.5 font-medium ${!notif.read ? 'text-ink' : 'text-ink-soft'}`}>
+                        {notif.title}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
                       {!notif.read && (
-                        <span className="w-2 h-2 bg-primary-600 rounded-full" />
+                        <span className="h-2 w-2 rounded-full bg-accent-500" aria-label="Sin leer" />
                       )}
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                      <span className="whitespace-nowrap text-xs text-muted">
                         {formatDate(notif.createdAt)}
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">{notif.message}</p>
+                  <p className="mt-1 text-sm text-ink-soft">{notif.message}</p>
                   {notif.relatedJobId && (
                     <Link
                       to={`/trabajos/${notif.relatedJobId}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-xs text-primary-600 hover:underline mt-2 inline-block"
+                      className="mt-2 inline-block text-xs hover:underline"
                     >
                       Ver trabajo →
                     </Link>

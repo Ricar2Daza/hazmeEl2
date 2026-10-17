@@ -2,9 +2,21 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HazMe - Encuentra o publica trabajos</title>
+    <meta name="theme-color" content="#1969A8" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="description" content="HazmeEl2 — Bolsa de trabajo independiente: publica trabajos y conecta con profesionales." />
+    <title>HazmeEl2 | Trabajo independiente</title>
+    <script>
+      // Aplica el tema antes del primer paint para evitar flash (FOUC).
+      // Persiste en localStorage; si no hay preferencia, usa prefers-color-scheme.
+      try {
+        var tema = localStorage.getItem('hazme-theme') ||
+          (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (tema === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

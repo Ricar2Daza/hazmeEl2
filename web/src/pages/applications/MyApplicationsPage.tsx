@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Briefcase, MessageCircle } from 'lucide-react';
 import api from '@/lib/axios';
 
 interface Application {
@@ -38,9 +39,9 @@ const statusBadge: Record<string, string> = {
 };
 
 const statusText: Record<string, string> = {
-  PENDIENTE: '⏳ Pendiente',
-  ACEPTADA: '✅ Aceptada',
-  RECHAZADA: '❌ Rechazada',
+  PENDIENTE: 'Pendiente',
+  ACEPTADA: 'Aceptada',
+  RECHAZADA: 'Rechazada',
 };
 
 export default function MyApplicationsPage() {
@@ -70,28 +71,29 @@ export default function MyApplicationsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mis postulaciones</h1>
-        <p className="text-gray-600 mt-1">Revisa el estado de tus postulaciones enviadas</p>
+        <p className="text-xs font-medium uppercase text-muted">Actividad</p>
+        <h1 className="mt-2 text-2xl font-semibold text-ink">Mis postulaciones</h1>
+        <p className="mt-1 text-sm text-ink-soft">Revisa el estado de tus propuestas</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+      <div className="grid grid-cols-12 gap-3 sm:gap-4">
+        <div className="card col-span-6 lg:col-span-3">
+          <p className="text-sm text-muted">Total</p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{stats.total}</p>
         </div>
-        <div className="card">
-          <p className="text-sm text-gray-500">Pendientes</p>
-          <p className="text-2xl font-bold text-yellow-600 mt-1">{stats.pending}</p>
+        <div className="card col-span-6 lg:col-span-3">
+          <p className="text-sm text-muted">Pendientes</p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{stats.pending}</p>
         </div>
-        <div className="card">
-          <p className="text-sm text-gray-500">Aceptadas</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">{stats.accepted}</p>
+        <div className="card col-span-6 lg:col-span-3">
+          <p className="text-sm text-muted">Aceptadas</p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{stats.accepted}</p>
         </div>
-        <div className="card">
-          <p className="text-sm text-gray-500">Rechazadas</p>
-          <p className="text-2xl font-bold text-red-600 mt-1">{stats.rejected}</p>
+        <div className="card col-span-6 lg:col-span-3">
+          <p className="text-sm text-muted">Rechazadas</p>
+          <p className="mt-1 text-2xl font-semibold text-ink">{stats.rejected}</p>
         </div>
       </div>
 
@@ -99,33 +101,32 @@ export default function MyApplicationsPage() {
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="card animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-3" />
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-              <div className="h-4 bg-gray-200 rounded w-2/3" />
+              <div className="h-6 bg-line rounded w-3/4 mb-3" />
+              <div className="h-4 bg-line rounded w-1/2 mb-2" />
+              <div className="h-4 bg-line rounded w-2/3" />
             </div>
           ))}
         </div>
       ) : applications.length === 0 ? (
         <div className="card text-center py-16">
-          <p className="text-6xl mb-4">📨</p>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Aún no te has postulado</h3>
-          <p className="text-gray-600 max-w-md mx-auto mb-6">
+          <h3 className="text-lg font-semibold text-ink">Aún no te has postulado</h3>
+          <p className="text-ink-soft max-w-md mx-auto mb-6">
             Explora los trabajos disponibles y encuentra la oportunidad perfecta para tus habilidades.
           </p>
           <Link to="/trabajos/buscar" className="btn-primary">
-            🔍 Buscar trabajos
+            Buscar trabajos
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-12 gap-3 sm:gap-4">
           {applications.map((app) => (
-            <div key={app.id} className="card">
-              <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+            <div key={app.id} className="card col-span-12">
+              <div className="grid grid-cols-12 items-start gap-4">
+                <div className="col-span-12 min-w-0 sm:col-span-8">
+                  <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
                     <Link
                       to={`/trabajos/${app.jobId}`}
-                      className="font-semibold text-gray-900 text-lg hover:text-primary-600 line-clamp-2 flex-1 mr-3"
+                      className="line-clamp-2 text-lg font-semibold text-ink hover:text-link"
                     >
                       {app.job?.title || 'Trabajo'}
                     </Link>
@@ -134,52 +135,47 @@ export default function MyApplicationsPage() {
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600 mb-3">
+                  <div className="mb-4 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-muted">
                     {app.job?.category && (
-                      <div className="flex items-center gap-1.5">
-                        <span>🏷️</span>
+                      <div>
                         <span>{app.job.category.name}</span>
                       </div>
                     )}
-                    <div className="flex items-center gap-1.5">
-                      <span>💰</span>
+                    <div>
                       <span>${app.job?.budgetMin} - ${app.job?.budgetMax}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span>📍</span>
+                    <div>
                       <span className="line-clamp-1">{app.job?.locationAddress || '—'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span>⏰</span>
+                    <div>
                       <span>Límite: {app.job?.deadlineDate ? formatDate(app.job.deadlineDate) : '—'}</span>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-3 text-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 text-xs font-bold">
+                      <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary-500 text-xs font-semibold text-white">
                         {app.job?.publisher?.fullName?.charAt(0).toUpperCase() || 'P'}
                       </div>
                       <div>
-                        <span className="text-gray-500">Publicado por: </span>
-                        <span className="font-medium text-gray-900">
+                        <span className="text-muted">Publicado por: </span>
+                        <span className="font-medium text-ink">
                           {app.job?.publisher?.fullName || '—'}
                         </span>
                         {app.job?.publisher?.companyName && (
-                          <span className="text-gray-500"> ({app.job.publisher.companyName})</span>
+                          <span className="text-muted"> ({app.job.publisher.companyName})</span>
                         )}
                       </div>
                     </div>
-                    <span className="text-xs text-gray-400">|</span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-[13px] text-muted">
                       Postulado: {formatDate(app.createdAt)}
                     </span>
                   </div>
 
                   {app.status === 'ACEPTADA' && (
-                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-                      <p className="text-green-800 font-medium text-sm">
-                        🎉 ¡Felicidades! Tu postulación fue aceptada.
+                    <div className="mt-4 rounded-lg border border-line p-4">
+                      <p className="text-sm font-medium text-ink-mid">
+                        Tu postulación fue aceptada.
                         {app.job?.publisher?.email && (
                           <> Contacta al publicante: <a href={`mailto:${app.job.publisher.email}`} className="underline font-semibold">{app.job.publisher.email}</a></>
                         )}
@@ -188,9 +184,14 @@ export default function MyApplicationsPage() {
                   )}
                 </div>
 
-                <div className="flex-shrink-0">
-                  <Link to={`/trabajos/${app.jobId}`} className="btn-secondary w-full lg:w-auto">
-                    🔍 Ver trabajo
+                <div className="col-span-12 grid grid-cols-1 gap-2 sm:col-span-4 xl:grid-cols-2">
+                  <Link to={`/mensajes/${app.id}`} className="btn-primary text-center">
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    Contactar
+                  </Link>
+                  <Link to={`/trabajos/${app.jobId}`} className="btn-secondary text-center">
+                    <Briefcase className="h-4 w-4" aria-hidden="true" />
+                    Ver trabajo
                   </Link>
                 </div>
               </div>

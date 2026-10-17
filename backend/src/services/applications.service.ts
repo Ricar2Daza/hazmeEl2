@@ -2,6 +2,7 @@ import { Prisma, ApplicationStatus, JobStatus, NotificationType } from '@prisma/
 import prisma from '../utils/prisma';
 import { AppError } from '../utils/AppError';
 import { emitToUser } from '../utils/socket';
+import { sendApplicationAcceptedEmail, sendNewApplicationEmail } from '../utils/email';
 
 const APPLICATION_INCLUDE: Prisma.ApplicationInclude = {
   job: {
@@ -35,7 +36,10 @@ const APPLICATION_INCLUDE: Prisma.ApplicationInclude = {
 };
 
 export const applyToJob = async (jobId: string, applicantId: string, message?: string | null) => {
-  const job = await prisma.job.findUnique({ where: { id: jobId } });
+  const job = await prisma.job.findUnique({
+    where: { id: jobId },
+    include: { publisher: { select: { email: true, fullName: true } } },
+  });
   if (!job) {
     throw new AppError('Trabajo no encontrado', 404);
   }
@@ -77,6 +81,14 @@ export const applyToJob = async (jobId: string, applicantId: string, message?: s
     application,
     notification,
   });
+  await sendNewApplicationEmail({
+    recipientEmail: job.publisher.email,
+    recipientName: job.publisher.fullName,
+    senderName: application.applicant.fullName,
+    jobTitle: application.job.title,
+    jobId: application.jobId,
+    applicationId: application.id,
+  });
 
   return application;
 };
@@ -108,7 +120,16 @@ export const listJobApplications = async (jobId: string, publisherId: string) =>
 const getPublisherFromApplication = async (applicationId: string) => {
   const app = await prisma.application.findUnique({
     where: { id: applicationId },
-    include: { job: { select: { publisherId: true, title: true } } },
+    include: {
+      job: {
+        select: {
+          publisherId: true,
+          title: true,
+          status: true,
+          publisher: { select: { fullName: true } },
+        },
+      },
+    },
   });
   if (!app) {
     throw new AppError('Postulación no encontrada', 404);
@@ -121,21 +142,32 @@ export const acceptApplication = async (applicationId: string, publisherId: stri
   if (app.job.publisherId !== publisherId) {
     throw new AppError('No tienes permiso para gestionar esta postulación', 403);
   }
+  if (app.status !== ApplicationStatus.PENDIENTE) {
+    throw new AppError('Esta postulación ya fue gestionada', 409);
+  }
 
-  const updated = await prisma.application.update({
-    where: { id: applicationId },
-    data: { status: ApplicationStatus.ACEPTADA },
-    include: APPLICATION_INCLUDE,
-  });
-
-  try {
-    await prisma.job.update({
-      where: { id: app.jobId },
+  const updated = await prisma.$transaction(async (transaction) => {
+    const claimedJob = await transaction.job.updateMany({
+      where: { id: app.jobId, status: JobStatus.ABIERTO },
       data: { status: JobStatus.EN_PROGRESO },
     });
-  } catch (e) {
-    // Ignorar error de transición de status si no procede
-  }
+    if (claimedJob.count !== 1) {
+      throw new AppError('Ya elegiste a un profesional para este trabajo', 409);
+    }
+
+    const acceptedApplication = await transaction.application.updateMany({
+      where: { id: applicationId, status: ApplicationStatus.PENDIENTE },
+      data: { status: ApplicationStatus.ACEPTADA },
+    });
+    if (acceptedApplication.count !== 1) {
+      throw new AppError('Esta postulación ya fue gestionada', 409);
+    }
+
+    return transaction.application.findUniqueOrThrow({
+      where: { id: applicationId },
+      include: APPLICATION_INCLUDE,
+    });
+  });
 
   const notification = await prisma.notification.create({
     data: {
@@ -150,6 +182,14 @@ export const acceptApplication = async (applicationId: string, publisherId: stri
   emitToUser(updated.applicantId, 'application_accepted', {
     application: updated,
     notification,
+  });
+  await sendApplicationAcceptedEmail({
+    recipientEmail: updated.applicant.email,
+    recipientName: updated.applicant.fullName,
+    senderName: app.job.publisher.fullName,
+    jobTitle: updated.job.title,
+    jobId: updated.jobId,
+    applicationId: updated.id,
   });
 
   return updated;

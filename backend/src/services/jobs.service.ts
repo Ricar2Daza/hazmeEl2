@@ -16,8 +16,6 @@ const BASE_JOB_INCLUDE = {
       experienceYears: true,
       skills: true,
       locationAddress: true,
-      locationLat: true,
-      locationLng: true,
       createdAt: true,
     },
   },
@@ -28,8 +26,6 @@ interface CreateJobInput {
   title: string;
   description: string;
   locationAddress: string;
-  locationLat: number;
-  locationLng: number;
   budgetMin: number;
   budgetMax: number;
   deadlineDate: Date;
@@ -40,8 +36,6 @@ interface UpdateJobInput {
   title?: string;
   description?: string;
   locationAddress?: string;
-  locationLat?: number;
-  locationLng?: number;
   budgetMin?: number;
   budgetMax?: number;
   deadlineDate?: Date;
@@ -52,9 +46,6 @@ interface UpdateJobInput {
 interface ListJobsQuery {
   search?: string;
   category?: string;
-  lat?: string;
-  lng?: string;
-  radius?: string;
   budgetMin?: string;
   budgetMax?: string;
   deadlineFrom?: string;
@@ -64,20 +55,6 @@ interface ListJobsQuery {
   limit?: string;
   sortBy?: string;
 }
-
-const haversine = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
 
 export const createJob = async (publisherId: string, input: CreateJobInput) => {
   if (input.budgetMin > input.budgetMax) {
@@ -177,6 +154,8 @@ export const listJobs = async (query: ListJobsQuery, _userId?: string) => {
   const skip = (page - 1) * limit;
 
   const where: Prisma.JobWhereInput = {};
+  where.status = query.status || JobStatus.ABIERTO;
+  if (_userId) where.publisherId = { not: _userId };
 
   if (query.search) {
     where.OR = [
@@ -206,10 +185,6 @@ export const listJobs = async (query: ListJobsQuery, _userId?: string) => {
     where.deadlineDate = { ...(where.deadlineDate as any), lte: new Date(query.deadlineTo) };
   }
 
-  if (query.status) {
-    where.status = query.status;
-  }
-
   const sortBy = query.sortBy || 'createdAt';
   const sortMap: Record<string, Prisma.JobOrderByWithRelationInput> = {
     createdAt: { createdAt: 'desc' },
@@ -219,21 +194,13 @@ export const listJobs = async (query: ListJobsQuery, _userId?: string) => {
   };
   const orderBy = sortMap[sortBy] || sortMap.createdAt;
 
-  let jobs = await prisma.job.findMany({
+  const jobs = await prisma.job.findMany({
     where,
     skip,
     take: limit,
     orderBy,
     include: BASE_JOB_INCLUDE,
   });
-
-  if (query.lat && query.lng) {
-    const lat = parseFloat(query.lat);
-    const lng = parseFloat(query.lng);
-    const radius = parseFloat(query.radius || '10');
-
-    jobs = jobs.filter((j) => haversine(lat, lng, j.locationLat, j.locationLng) <= radius);
-  }
 
   const total = await prisma.job.count({ where });
   const totalPages = Math.ceil(total / limit);

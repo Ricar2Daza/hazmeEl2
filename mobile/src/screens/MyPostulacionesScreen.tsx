@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, FlatList } from 'react-native';
-import { Text, Chip } from 'react-native-paper';
+import { Button, Text, Chip } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { COLORS, APPLICATION_STATUS_COLORS } from '../constants';
@@ -63,6 +63,15 @@ const MyPostulacionesScreen: React.FC = () => {
           <ApplicationCard
             application={item}
             onPress={() => item.job && navigation.getParent()?.getParent()?.navigate('JobDetail', { jobId: item.jobId })}
+            actions={(
+              <Button
+                mode="outlined"
+                icon="message-outline"
+                onPress={() => navigation.getParent()?.navigate('Chat', { applicationId: item.id })}
+              >
+                Contactar publicante
+              </Button>
+            )}
           />
         )}
       />

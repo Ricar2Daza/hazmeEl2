@@ -49,11 +49,15 @@ cp .env.example backend/.env
 > ```
 > (user: postgres, pass: postgres, db: hazme — coincide con DATABASE_URL por defecto)
 
+Para enviar notificaciones por correo, reemplaza `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` y `EMAIL_FROM` en `backend/.env` con los datos de tu proveedor SMTP. Los valores del archivo de ejemplo no envían correo.
+
 ### 4. Inicializar Base de Datos, migraciones y datos de prueba
 ```bash
 npm run prisma:migrate   # Aplica schema a PostgreSQL
 npm run prisma:seed      # Inserta 4 usuarios demo, categorías y trabajos
 ```
+
+La migración de chat crea mensajes asociados a cada postulación. Las conversaciones se pueden abrir desde **Mis postulaciones** o desde **Postulantes**; ambas personas pueden enviar mensajes en tiempo real.
 
 ### 5. Levantar los servicios
 
@@ -94,8 +98,8 @@ npm run dev:mobile
 
 1. **Registro y Login** (sin roles; con verificación de email)
 2. **Perfil unificado** (datos personales + profesionales + empresa)
-3. **Publicar trabajos**: título, descripción, ubicación (lat/lng), presupuesto, fecha límite, categoría
-4. **Buscar trabajos**: texto + filtros (categoría, presupuesto, radio de km, fecha, orden)
+3. **Publicar trabajos**: título, descripción, ubicación (ciudad/zona), presupuesto, fecha límite, categoría
+4. **Buscar trabajos**: texto + filtros (categoría, presupuesto, fecha, orden)
 5. **Postularse** a trabajos de otros (con mensaje opcional)
 6. **Gestionar postulantes**: aceptar o rechazar (solo el publicador del trabajo)
 7. **Restricción**: No te puedes postular a tus propios trabajos
@@ -103,6 +107,52 @@ npm run dev:mobile
    - Nueva postulación → avisa al publicador
    - Aceptada / Rechazada → avisa al postulante
 9. **Panel unificado**: "Mis publicaciones" + "Mis postulaciones" + contadores
+10. **Chat directo** entre postulante y publicante, con historial persistido y actualizaciones en tiempo real
+
+### Pruebas
+
+Con PostgreSQL disponible, migraciones aplicadas y usuarios demo sembrados:
+
+```bash
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+```
+
+La prueba E2E requiere instalar Chromium una vez con `npx --prefix web playwright install chromium`. La integración y E2E crean y eliminan sus trabajos de prueba al finalizar.
+
+---
+
+## Sistema de Diseño (Web)
+
+La interfaz web usa una identidad de marca unificada con soporte completo de **modo claro / oscuro**.
+
+### Colores de marca
+
+| Rol | Light | Dark | Uso |
+|-----|-------|------|-----|
+| Azul principal | `#1969A8` | `#1969A8` | Isotipo, avatares, estados activos |
+| Azul oscuro (texto) | `#173F63` | `#F8FAFC` | Encabezados y texto principal |
+| Naranja acento | `#DE863B` | `#DE863B` | CTAs (`Postularme`, `Crear cuenta`, `Contactar`) |
+| Gris neutro | `#8B9BA8` | `#8B9BA8` | Bordes y elementos decorativos |
+| Fondo | `#F8FAFC` | `#0F172A` | Fondo de página |
+| Superficie (cards) | `#FFFFFF` | `#1E293B` | Tarjetas y paneles |
+
+### Tokens y modo oscuro
+
+- Los colores se exponen como **tokens semánticos** (`bg`, `card`, `subtle`, `line`, `ink`, `muted`, `link`, `primary`, `accent`) definidos en `web/tailwind.config.js` y resueltos por variables CSS en `web/src/index.css`.
+- El modo oscuro usa la estrategia `darkMode: 'class'` (clase `dark` en `<html>`).
+- El toggle del header (`ThemeToggle`) guarda la preferencia en `localStorage` (clave `hazme-theme`), respeta `prefers-color-scheme` y se sincroniza entre pestañas.
+- Un script inline en `web/index.html` evita el "flash" de tema incorrecto al cargar.
+
+### Tipografía e iconografía
+
+- **Poppins** (auto-hospedada vía `@fontsource/poppins`, pesos 400/500/600/700) como `font-sans`.
+- Iconos **Lucide** (`lucide-react`) en navegación, botones, formularios y estados.
+
+### Responsividad
+
+Diseño mobile-first verificado de **320px a 2560px** sin scroll horizontal ni solapamientos. En móvil se usa header compacto + barra de navegación inferior; desde `md` aparece el sidebar lateral.
 
 ---
 
@@ -132,6 +182,7 @@ backend/src/
 
 - Especificación del producto: [`.trae/specs/spec.md`](.trae/specs/spec.md)
 - Plan de implementación: [`.trae/specs/tasks.md`](.trae/specs/tasks.md)
+- Guía para correr desde VS Code: [README-VSCODE.md](README-VSCODE.md)
 - Manual de usuario: [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md)
 - Plan de pruebas: [docs/PLAN_PRUEBAS.md](docs/PLAN_PRUEBAS.md)
 

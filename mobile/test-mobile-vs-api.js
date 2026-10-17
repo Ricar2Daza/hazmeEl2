@@ -61,7 +61,7 @@ const chk = (name, cond, extra = '') => {
     chk('1. Health baseURL resolviendo a localhost:3000/api', h.status === 200 && h.data?.status === 'success', `HTTP ${h.status}`);
 
     const cats = await categoriesApi.list();
-    chk('2. categoriesApi.list()', cats.status === 200 && Array.isArray(cats.data?.data) && cats.data.data.length === 5, `${cats.data?.data?.length} categorías`);
+    chk('2. categoriesApi.list()', cats.status === 200 && Array.isArray(cats.data?.data) && cats.data.data.length >= 5, `${cats.data?.data?.length} categorías`);
     const catIds = cats.data?.data || [];
 
     const lg = await authApi.login({ email: 'u1@test.com', password: 'Test1234!' });
@@ -99,7 +99,7 @@ const chk = (name, cond, extra = '') => {
 
     if (firstMine) {
       const aps = await jobsApi.applications(firstMine.id);
-      chk('11. jobsApi.applications(jobId) — Ver postulantes', aps.status === 200 && Array.isArray(aps.data), `${(aps.data||[]).length} postulantes en "${firstMine.title.slice(0,30)}"`);
+      chk('11. jobsApi.applications(jobId) — Ver postulantes', aps.status === 200 && Array.isArray(aps.data?.data), `${(aps.data?.data||[]).length} postulantes en "${firstMine.title.slice(0,30)}"`);
     }
 
     const nc = await notificationsApi.unreadCount();

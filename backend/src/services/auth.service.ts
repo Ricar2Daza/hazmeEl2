@@ -25,8 +25,6 @@ interface ProfileInput {
   experienceYears?: number | null;
   skills?: string[];
   locationAddress?: string | null;
-  locationLat?: number | null;
-  locationLng?: number | null;
 }
 
 const sanitizeUser = (user: any) => {
@@ -144,8 +142,6 @@ export const updateProfile = async (userId: string, input: ProfileInput) => {
   if (input.experienceYears !== undefined) data.experienceYears = input.experienceYears;
   if (input.skills !== undefined) data.skills = input.skills;
   if (input.locationAddress !== undefined) data.locationAddress = input.locationAddress;
-  if (input.locationLat !== undefined) data.locationLat = input.locationLat;
-  if (input.locationLng !== undefined) data.locationLng = input.locationLng;
 
   const user = await prisma.user.update({
     where: { id: userId },

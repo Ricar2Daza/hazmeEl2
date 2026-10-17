@@ -24,8 +24,6 @@ export const createJobSchema = z.object({
   budgetMax: z.number().int().min(0, 'Presupuesto máximo no puede ser negativo'),
   deadlineDate: z.coerce.date(),
   locationAddress: z.string().min(5, 'Dirección requerida'),
-  locationLat: z.number({ invalid_type_error: 'Latitud requerida' }),
-  locationLng: z.number({ invalid_type_error: 'Longitud requerida' }),
 }).refine((data) => data.budgetMax >= data.budgetMin, {
   message: 'Presupuesto máximo debe ser mayor o igual al mínimo',
   path: ['budgetMax'],
@@ -48,8 +46,6 @@ export const editProfileSchema = z.object({
   experienceYears: z.number().int().min(0, 'Años no pueden ser negativos').nullable().optional(),
   skills: z.array(z.string()).optional(),
   locationAddress: z.string().nullable().optional(),
-  locationLat: z.number().nullable().optional(),
-  locationLng: z.number().nullable().optional(),
 });
 
 export type EditProfileInput = z.infer<typeof editProfileSchema>;

@@ -42,14 +42,13 @@ model User {
   experienceYears  Int?
   skills           String[]       @default([])
   locationAddress  String?
-  locationLat      Float?
-  locationLng      Float?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
   publishedJobs    Job[]
   myApplications   Application[]
   notifications    Notification[]
+  chatMessages     ChatMessage[]
 }
 
 model Category {
@@ -67,8 +66,6 @@ model Job {
   title           String
   description     String
   locationAddress String
-  locationLat     Float
-  locationLng     Float
   budgetMin       Int
   budgetMax       Int
   deadlineDate    DateTime
@@ -95,8 +92,22 @@ model Application {
 
   job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
   applicant   User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  chatMessages ChatMessage[]
 
   @@unique([jobId, applicantId])
+}
+
+model ChatMessage {
+  id            String      @id @default(uuid())
+  applicationId String
+  senderId      String
+  content       String      @db.VarChar(2000)
+  createdAt     DateTime    @default(now())
+
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  sender        User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
 }
 
 model Notification {

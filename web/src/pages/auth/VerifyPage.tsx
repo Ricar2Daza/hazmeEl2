@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import api from '@/lib/axios';
+import Logo from '@/components/ui/Logo';
 
 export default function VerifyPage() {
   const { token } = useParams<{ token: string }>();
@@ -31,26 +33,25 @@ export default function VerifyPage() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md card text-center">
+    <div className="flex min-h-screen items-center justify-center bg-bg p-4">
+      <div className="card w-full max-w-md text-center">
+        <div className="mb-6 flex justify-center">
+          <Logo linked={false} />
+        </div>
         {status === 'loading' && (
           <>
-            <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4" />
-            <h1 className="text-xl font-bold text-gray-900">Verificando email...</h1>
-            <p className="text-gray-600 mt-2">Espera un momento</p>
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-accent-100 border-t-accent-500" />
+            <h1 className="text-xl font-semibold text-ink">Verificando email...</h1>
+            <p className="mt-2 text-ink-soft">Espera un momento</p>
           </>
         )}
 
         {status === 'success' && (
           <>
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">¡Verificación exitosa!</h1>
-            <p className="text-gray-600 mt-2">{message}</p>
-            <Link to="/login" className="btn-primary w-full mt-6">
+            <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-emerald-600" aria-hidden="true" />
+            <h1 className="text-xl font-semibold text-ink">¡Verificación exitosa!</h1>
+            <p className="mt-2 text-ink-soft">{message}</p>
+            <Link to="/login" className="btn-primary mt-6 w-full">
               Ir a iniciar sesión
             </Link>
           </>
@@ -58,14 +59,10 @@ export default function VerifyPage() {
 
         {status === 'error' && (
           <>
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900">Error de verificación</h1>
-            <p className="text-gray-600 mt-2">{message}</p>
-            <Link to="/" className="btn-secondary w-full mt-6">
+            <XCircle className="mx-auto mb-4 h-12 w-12 text-red-600 dark:text-red-400" aria-hidden="true" />
+            <h1 className="text-xl font-semibold text-ink">Error de verificación</h1>
+            <p className="mt-2 text-ink-soft">{message}</p>
+            <Link to="/" className="btn-secondary mt-6 w-full">
               Volver al inicio
             </Link>
           </>

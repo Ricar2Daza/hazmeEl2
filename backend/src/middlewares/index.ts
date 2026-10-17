@@ -22,6 +22,25 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   }
 };
 
+export const optionalAuthenticateJWT = (req: Request, _res: Response, next: NextFunction): void => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    next();
+    return;
+  }
+
+  try {
+    if (!authHeader.startsWith('Bearer ')) {
+      throw new AppError('Token de autenticación inválido', 401);
+    }
+    const payload = verifyToken(authHeader.slice(7));
+    req.user = { id: payload.sub };
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const validate = (schema: ZodSchema): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {

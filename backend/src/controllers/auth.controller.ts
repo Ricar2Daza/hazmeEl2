@@ -42,8 +42,6 @@ export const updateProfileSchema = z.object({
     experienceYears: z.number().int().min(0).nullish(),
     skills: z.array(z.string()).optional(),
     locationAddress: z.string().nullish(),
-    locationLat: z.number().nullish(),
-    locationLng: z.number().nullish(),
   }),
 });
 

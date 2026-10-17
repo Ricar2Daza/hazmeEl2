@@ -19,8 +19,6 @@
       },
       "package": "com.hazme.app",
       "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
         "NOTIFICATIONS"
       ]
     },

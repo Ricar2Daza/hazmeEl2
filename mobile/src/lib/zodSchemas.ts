@@ -20,8 +20,6 @@ export const jobCreateSchema = z.object({
   title: z.string().min(5, 'Título debe tener al menos 5 caracteres'),
   description: z.string().min(20, 'Descripción debe tener al menos 20 caracteres'),
   locationAddress: z.string().min(5, 'Dirección requerida'),
-  locationLat: z.number({ required_error: 'Latitud requerida' }),
-  locationLng: z.number({ required_error: 'Longitud requerida' }),
   budgetMin: z.number().int().min(0, 'Presupuesto mínimo inválido'),
   budgetMax: z.number().int().min(0, 'Presupuesto máximo inválido'),
   deadlineDate: z.coerce.date(),
@@ -44,8 +42,6 @@ export const updateProfileSchema = z.object({
   experienceYears: z.number().int().min(0).nullable().optional(),
   skills: z.array(z.string()).optional(),
   locationAddress: z.string().nullable().optional(),
-  locationLat: z.number().nullable().optional(),
-  locationLng: z.number().nullable().optional(),
 });
 
 export type LoginForm = z.infer<typeof loginSchema>;

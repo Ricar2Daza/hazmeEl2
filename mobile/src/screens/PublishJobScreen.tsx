@@ -36,8 +36,6 @@ const PublishJobScreen: React.FC = () => {
       title: '',
       description: '',
       locationAddress: '',
-      locationLat: 0,
-      locationLng: 0,
       budgetMin: 0,
       budgetMax: 0,
       deadlineDate: new Date(Date.now() + 7 * 24 * 3600 * 1000),
@@ -205,34 +203,6 @@ const PublishJobScreen: React.FC = () => {
             </>
           )} />
         </View>
-
-        <View style={{ flexDirection: 'row', gap: 10 }}>
-          <View style={[styles.field, { flex: 1 }]}>
-            <Text style={styles.lbl}>Latitud</Text>
-            <Controller control={control} name="locationLat" render={({ field }) => (
-              <TextInput
-                mode="outlined"
-                keyboardType="numeric"
-                value={String(field.value || '')}
-                onChangeText={(v) => field.onChange(Number(v) || 0)}
-              />
-            )} />
-          </View>
-          <View style={[styles.field, { flex: 1 }]}>
-            <Text style={styles.lbl}>Longitud</Text>
-            <Controller control={control} name="locationLng" render={({ field }) => (
-              <TextInput
-                mode="outlined"
-                keyboardType="numeric"
-                value={String(field.value || '')}
-                onChangeText={(v) => field.onChange(Number(v) || 0)}
-              />
-            )} />
-          </View>
-        </View>
-        <Text style={{ fontSize: 12, color: COLORS.gray500, marginBottom: 20 }}>
-          Nota: latitud y longitud se pueden dejar en 0 si no dispones de ellas.
-        </Text>
 
         <Button
           mode="contained"

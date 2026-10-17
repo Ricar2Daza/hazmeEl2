@@ -16,14 +16,13 @@ interface Filters {
   category: string;
   budgetMin: string;
   budgetMax: string;
-  radius: string;
   deadline: string;
 }
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [filters, setFilters] = useState<Filters>({
-    search: '', category: '', budgetMin: '', budgetMax: '', radius: '', deadline: '',
+    search: '', category: '', budgetMin: '', budgetMax: '', deadline: '',
   });
   const [showFilters, setShowFilters] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -46,7 +45,6 @@ const SearchScreen: React.FC = () => {
     if (filters.category) p.category = filters.category;
     if (filters.budgetMin) p.budgetMin = filters.budgetMin;
     if (filters.budgetMax) p.budgetMax = filters.budgetMax;
-    if (filters.radius) { p.radius = filters.radius; p.lat = 0; p.lng = 0; }
     if (filters.deadline) p.deadlineFrom = filters.deadline;
     return p;
   }, [filters]);
@@ -60,9 +58,9 @@ const SearchScreen: React.FC = () => {
   });
 
   const hasActiveFilters =
-    filters.category || filters.budgetMin || filters.budgetMax || filters.radius || filters.deadline;
+    filters.category || filters.budgetMin || filters.budgetMax || filters.deadline;
 
-  const resetFilters = () => setFilters({ search: '', category: '', budgetMin: '', budgetMax: '', radius: '', deadline: '' });
+  const resetFilters = () => setFilters({ search: '', category: '', budgetMin: '', budgetMax: '', deadline: '' });
 
   const activeChips: { label: string; val: string; key: keyof Filters }[] = [];
   if (filters.category) {
@@ -190,17 +188,6 @@ const SearchScreen: React.FC = () => {
                   onChangeText={(v) => setFilters((f) => ({ ...f, budgetMax: v }))}
                 />
               </View>
-            </View>
-
-            <View style={{ marginTop: 14 }}>
-              <Text style={styles.lbl}>Radio (km)</Text>
-              <TextInput
-                keyboardType="numeric"
-                mode="outlined"
-                placeholder="Ej: 10"
-                value={filters.radius}
-                onChangeText={(v) => setFilters((f) => ({ ...f, radius: v }))}
-              />
             </View>
 
             <View style={{ marginTop: 14 }}>

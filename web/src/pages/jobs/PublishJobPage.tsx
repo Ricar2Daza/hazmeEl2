@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { createJobSchema, CreateJobInput } from '@/lib/schemas/zodSchemas';
@@ -56,8 +57,6 @@ export default function PublishJobPage() {
       budgetMax: 0,
       deadlineDate: new Date(deadlineStr),
       locationAddress: '',
-      locationLat: -34.6037,
-      locationLng: -58.3816,
     },
   });
 
@@ -71,8 +70,6 @@ export default function PublishJobPage() {
         budgetMax: existingJob.budgetMax,
         deadlineDate: new Date(existingJob.deadlineDate),
         locationAddress: existingJob.locationAddress,
-        locationLat: existingJob.locationLat,
-        locationLng: existingJob.locationLng,
       });
     }
   }, [existingJob, reset]);
@@ -106,14 +103,15 @@ export default function PublishJobPage() {
       <div>
         <Link
           to={isEditing ? '/mis-publicaciones' : '/trabajos/buscar'}
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 mb-4"
+          className="mb-4 inline-flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-ink"
         >
-          ← Volver
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Volver
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-semibold text-ink">
           {isEditing ? 'Editar trabajo' : 'Publicar nuevo trabajo'}
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-ink-soft mt-1">
           {isEditing
             ? 'Actualiza los detalles de tu publicación'
             : 'Describe el trabajo que necesitas y empieza a recibir postulaciones'}
@@ -130,7 +128,7 @@ export default function PublishJobPage() {
             placeholder="Ej: Desarrollador React para landing page"
           />
           {errors.title && (
-            <p className="text-red-600 text-sm mt-1">{errors.title.message}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.title.message}</p>
           )}
         </div>
 
@@ -143,7 +141,7 @@ export default function PublishJobPage() {
             ))}
           </select>
           {errors.categoryId && (
-            <p className="text-red-600 text-sm mt-1">{errors.categoryId.message}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.categoryId.message}</p>
           )}
         </div>
 
@@ -156,9 +154,9 @@ export default function PublishJobPage() {
             placeholder="Describe el proyecto, objetivos, requisitos, entregables, etc."
           />
           {errors.description && (
-            <p className="text-red-600 text-sm mt-1">{errors.description.message}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.description.message}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted mt-1">
             Mínimo 20 caracteres. Sé específico para atraer mejores postulantes.
           </p>
         </div>
@@ -174,7 +172,7 @@ export default function PublishJobPage() {
               min="0"
             />
             {errors.budgetMin && (
-              <p className="text-red-600 text-sm mt-1">{errors.budgetMin.message}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.budgetMin.message}</p>
             )}
           </div>
           <div>
@@ -187,7 +185,7 @@ export default function PublishJobPage() {
               min={budgetMinWatch || 0}
             />
             {errors.budgetMax && (
-              <p className="text-red-600 text-sm mt-1">{errors.budgetMax.message}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.budgetMax.message}</p>
             )}
           </div>
         </div>
@@ -201,10 +199,10 @@ export default function PublishJobPage() {
             min={new Date().toISOString().split('T')[0]}
           />
           {errors.deadlineDate && (
-            <p className="text-red-600 text-sm mt-1">{errors.deadlineDate.message}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.deadlineDate.message}</p>
           )}
           {deadlineValue && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted mt-1">
               Los postulantes verán esta fecha como plazo máximo de entrega estimada.
             </p>
           )}
@@ -219,43 +217,11 @@ export default function PublishJobPage() {
             placeholder="Ej: Av. Corrientes 1234, CABA, Buenos Aires"
           />
           {errors.locationAddress && (
-            <p className="text-red-600 text-sm mt-1">{errors.locationAddress.message}</p>
+            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.locationAddress.message}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Latitud *</label>
-            <input
-              type="number"
-              step="any"
-              {...register('locationLat', { valueAsNumber: true })}
-              className="input"
-              placeholder="-34.6037"
-            />
-            {errors.locationLat && (
-              <p className="text-red-600 text-sm mt-1">{errors.locationLat.message}</p>
-            )}
-          </div>
-          <div>
-            <label className="label">Longitud *</label>
-            <input
-              type="number"
-              step="any"
-              {...register('locationLng', { valueAsNumber: true })}
-              className="input"
-              placeholder="-58.3816"
-            />
-            {errors.locationLng && (
-              <p className="text-red-600 text-sm mt-1">{errors.locationLng.message}</p>
-            )}
-          </div>
-        </div>
-        <p className="text-xs text-gray-500 -mt-2">
-          Valores por defecto Buenos Aires (lat -34.60 / lng -58.38). Ajusta según la ubicación real.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-line">
           <Link
             to={isEditing ? '/mis-publicaciones' : '/trabajos/buscar'}
             className="btn-secondary flex-1"
@@ -267,9 +233,10 @@ export default function PublishJobPage() {
             disabled={isSubmitting}
             className="btn-primary flex-1"
           >
+            <Save className="h-4 w-4" aria-hidden="true" />
             {isSubmitting
               ? 'Guardando...'
-              : isEditing ? 'Guardar cambios' : '📢 Publicar trabajo'}
+              : isEditing ? 'Guardar cambios' : 'Publicar trabajo'}
           </button>
         </div>
       </form>

@@ -8,6 +8,8 @@ import MainTabs from './MainTabs';
 import JobDetailScreen from '../screens/JobDetailScreen';
 import GestionarPostulantesScreen from '../screens/GestionarPostulantesScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
+import ChatScreen from '../screens/ChatScreen';
+import ChatInboxScreen from '../screens/ChatInboxScreen';
 import { initSocket, setupSocketListeners, disconnectSocket } from '../lib/socket';
 import { useNotifStore } from '../store/notifStore';
 import { notificationsApi } from '../lib/axios';
@@ -19,6 +21,8 @@ export type RootStackParamList = {
   JobDetail: { jobId: string };
   ManageApplicants: { jobId: string };
   Notifications: undefined;
+  Chat: { applicationId: string };
+  ChatInbox: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -83,6 +87,16 @@ const RootNavigator: React.FC = () => {
               name="Notifications"
               component={NotificationsScreen}
               options={{ headerShown: true, title: 'Notificaciones' }}
+            />
+            <Stack.Screen
+              name="ChatInbox"
+              component={ChatInboxScreen}
+              options={{ headerShown: true, title: 'Mensajes' }}
+            />
+            <Stack.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={{ headerShown: true, title: 'Chat' }}
             />
           </>
         )}

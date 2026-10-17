@@ -1,4 +1,12 @@
-import { PrismaClient, JobStatus, ApplicationStatus, NotificationType } from '@prisma/client';
+import {
+  PrismaClient,
+  Job,
+  Application,
+  Notification,
+  JobStatus,
+  ApplicationStatus,
+  NotificationType,
+} from '@prisma/client';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 
@@ -26,8 +34,6 @@ async function main() {
         experienceYears: 5,
         skills: ['Gestión de proyectos', 'Agile', 'Scrum'],
         locationAddress: 'Calle Mayor 10, Madrid',
-        locationLat: 40.4168,
-        locationLng: -3.7038,
       },
     }),
     prisma.user.upsert({
@@ -44,8 +50,6 @@ async function main() {
         skills: ['JavaScript', 'TypeScript', 'React', 'Node.js'],
         portfolioUrl: 'https://carlosperez.dev',
         locationAddress: 'Gran Vía 45, Madrid',
-        locationLat: 40.4205,
-        locationLng: -3.7055,
       },
     }),
     prisma.user.upsert({
@@ -61,8 +65,6 @@ async function main() {
         experienceYears: 8,
         skills: ['AutoCAD', 'SketchUp', 'Diseño 3D'],
         locationAddress: 'Paseo de Gracia 120, Barcelona',
-        locationLat: 41.3977,
-        locationLng: 2.1684,
       },
     }),
     prisma.user.upsert({
@@ -78,8 +80,6 @@ async function main() {
         experienceYears: 10,
         skills: ['Electricidad', 'Fontanería', 'Carpintería'],
         locationAddress: 'Calle Serrano 80, Madrid',
-        locationLat: 40.4289,
-        locationLng: -3.6761,
       },
     }),
   ]);
@@ -92,6 +92,7 @@ async function main() {
     { name: 'Diseño', slug: 'diseno', description: 'Diseño gráfico, web, interiores, branding, etc.' },
     { name: 'Limpieza', slug: 'limpieza', description: 'Limpieza de hogares, oficinas, comunidades, etc.' },
     { name: 'Mantenimiento', slug: 'mantenimiento', description: 'Reparaciones, electricidad, fontanería, etc.' },
+    { name: 'Otros', slug: 'otros', description: 'Servicios y trabajos que no encajan en las categorías anteriores.' },
   ];
 
   const categories = await Promise.all(
@@ -109,207 +110,194 @@ async function main() {
   const [u1, u2, u3, u4] = users;
   const [catTec, catCons, catDis, catLim, catMant] = categories;
   const now = new Date();
+  const daysFromNow = (days: number) => new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
-  const jobs = await Promise.all([
-    prisma.job.create({
-      data: {
-        title: 'Desarrollar landing page para startup',
-        description: 'Necesitamos desarrollar una landing page moderna con formulario de contacto y sección de precios. Incluir diseño responsive.',
-        locationAddress: 'Madrid, España',
-        locationLat: 40.4168,
-        locationLng: -3.7038,
-        budgetMin: 800,
-        budgetMax: 1500,
-        deadlineDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-        categoryId: catTec.id,
-        publisherId: u1.id,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Reformar baño completo',
-        description: 'Reforma de baño de 6m2: cambiar azulejos, plato de ducha, inodoro y lavabo. Presupuesto cerrado.',
-        locationAddress: 'Barcelona, España',
-        locationLat: 41.3874,
-        locationLng: 2.1686,
-        budgetMin: 3000,
-        budgetMax: 5000,
-        deadlineDate: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000),
-        categoryId: catCons.id,
-        publisherId: u3.id,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Diseño de logotipo para restaurante',
-        description: 'Logotipo para restaurante de comida mediterránea. Necesitamos paleta cálida y tipografía elegante. Entregar archivos vectoriales.',
-        locationAddress: 'Valencia, España',
-        locationLat: 39.4699,
-        locationLng: -0.3763,
-        budgetMin: 200,
-        budgetMax: 500,
-        deadlineDate: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000),
-        categoryId: catDis.id,
-        publisherId: u1.id,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Limpieza profunda de piso',
-        description: 'Limpieza a fondo de piso de 80m2, 3 habitaciones, cocina y 2 baños. Una vez cada 2 semanas.',
-        locationAddress: 'Madrid, España',
-        locationLat: 40.4203,
-        locationLng: -3.7058,
-        budgetMin: 80,
-        budgetMax: 120,
-        deadlineDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-        categoryId: catLim.id,
-        publisherId: u2.id,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Reparar caldera de gas',
-        description: 'Caldera de gas no enciende. Necesito técnico certificado que pueda venir esta semana.',
-        locationAddress: 'Sevilla, España',
-        locationLat: 37.3891,
-        locationLng: -5.9845,
-        budgetMin: 100,
-        budgetMax: 300,
-        deadlineDate: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
-        categoryId: catMant.id,
-        publisherId: u3.id,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Aplicación móvil de delivery',
-        description: 'Desarrollo de app móvil para servicio de delivery local. iOS y Android. Backend incluido.',
-        locationAddress: 'Madrid, España',
-        locationLat: 40.4300,
-        locationLng: -3.6900,
-        budgetMin: 12000,
-        budgetMax: 20000,
-        deadlineDate: new Date(now.getTime() + 120 * 24 * 60 * 60 * 1000),
-        categoryId: catTec.id,
-        publisherId: u4.id,
-        status: JobStatus.EN_PROGRESO,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Branding para marca de ropa',
-        description: 'Identidad corporativa completa: logotipo, paleta, tipografía, packaging y redes sociales.',
-        locationAddress: 'Bilbao, España',
-        locationLat: 43.2630,
-        locationLng: -2.9350,
-        budgetMin: 1000,
-        budgetMax: 2500,
-        deadlineDate: new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000),
-        categoryId: catDis.id,
-        publisherId: u2.id,
-      },
-    }),
-    prisma.job.create({
-      data: {
-        title: 'Mantenimiento oficinas',
-        description: 'Servicio de mantenimiento mensual para oficina de 200m2: electricidad, fontanería y climatización.',
-        locationAddress: 'Zaragoza, España',
-        locationLat: 41.6488,
-        locationLng: -0.8891,
-        budgetMin: 200,
-        budgetMax: 400,
-        deadlineDate: new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000),
-        categoryId: catMant.id,
-        publisherId: u1.id,
-      },
-    }),
-  ]);
+  // Trabajos de ejemplo.
+  // Idempotente: si ya existe un trabajo con el mismo título y publicador, se reutiliza
+  // (no se duplica al volver a ejecutar `prisma db seed`).
+  const jobsData = [
+    {
+      title: 'Desarrollar landing page para startup',
+      description:
+        'Necesitamos desarrollar una landing page moderna con formulario de contacto y sección de precios. Incluir diseño responsive.',
+      locationAddress: 'Madrid, España',
+      budgetMin: 800,
+      budgetMax: 1500,
+      deadlineDate: daysFromNow(30),
+      categoryId: catTec.id,
+      publisherId: u1.id,
+    },
+    {
+      title: 'Reformar baño completo',
+      description: 'Reforma de baño de 6m2: cambiar azulejos, plato de ducha, inodoro y lavabo. Presupuesto cerrado.',
+      locationAddress: 'Barcelona, España',
+      budgetMin: 3000,
+      budgetMax: 5000,
+      deadlineDate: daysFromNow(60),
+      categoryId: catCons.id,
+      publisherId: u3.id,
+    },
+    {
+      title: 'Diseño de logotipo para restaurante',
+      description:
+        'Logotipo para restaurante de comida mediterránea. Necesitamos paleta cálida y tipografía elegante. Entregar archivos vectoriales.',
+      locationAddress: 'Valencia, España',
+      budgetMin: 200,
+      budgetMax: 500,
+      deadlineDate: daysFromNow(15),
+      categoryId: catDis.id,
+      publisherId: u1.id,
+    },
+    {
+      title: 'Limpieza profunda de piso',
+      description: 'Limpieza a fondo de piso de 80m2, 3 habitaciones, cocina y 2 baños. Una vez cada 2 semanas.',
+      locationAddress: 'Madrid, España',
+      budgetMin: 80,
+      budgetMax: 120,
+      deadlineDate: daysFromNow(7),
+      categoryId: catLim.id,
+      publisherId: u2.id,
+    },
+    {
+      title: 'Reparar caldera de gas',
+      description: 'Caldera de gas no enciende. Necesito técnico certificado que pueda venir esta semana.',
+      locationAddress: 'Sevilla, España',
+      budgetMin: 100,
+      budgetMax: 300,
+      deadlineDate: daysFromNow(5),
+      categoryId: catMant.id,
+      publisherId: u3.id,
+    },
+    {
+      title: 'Aplicación móvil de delivery',
+      description: 'Desarrollo de app móvil para servicio de delivery local. iOS y Android. Backend incluido.',
+      locationAddress: 'Madrid, España',
+      budgetMin: 12000,
+      budgetMax: 20000,
+      deadlineDate: daysFromNow(120),
+      categoryId: catTec.id,
+      publisherId: u4.id,
+      status: JobStatus.EN_PROGRESO,
+    },
+    {
+      title: 'Branding para marca de ropa',
+      description: 'Identidad corporativa completa: logotipo, paleta, tipografía, packaging y redes sociales.',
+      locationAddress: 'Bilbao, España',
+      budgetMin: 1000,
+      budgetMax: 2500,
+      deadlineDate: daysFromNow(45),
+      categoryId: catDis.id,
+      publisherId: u2.id,
+    },
+    {
+      title: 'Mantenimiento oficinas',
+      description: 'Servicio de mantenimiento mensual para oficina de 200m2: electricidad, fontanería y climatización.',
+      locationAddress: 'Zaragoza, España',
+      budgetMin: 200,
+      budgetMax: 400,
+      deadlineDate: daysFromNow(10),
+      categoryId: catMant.id,
+      publisherId: u1.id,
+    },
+  ];
+
+  const jobs: Job[] = [];
+  for (const data of jobsData) {
+    const existing = await prisma.job.findFirst({
+      where: { title: data.title, publisherId: data.publisherId },
+    });
+    jobs.push(existing ?? (await prisma.job.create({ data })));
+  }
 
   console.log('✅ Jobs creados');
 
-  const applications = await Promise.all([
-    prisma.application.create({
-      data: {
-        jobId: jobs[0].id,
-        applicantId: u2.id,
-        message: 'Tengo experiencia desarrollando landing pages con React y Tailwind. Podría tenerlo listo en 10 días.',
-        status: ApplicationStatus.PENDIENTE,
-      },
-    }),
-    prisma.application.create({
-      data: {
-        jobId: jobs[0].id,
-        applicantId: u3.id,
-        message: 'Soy full-stack developer con portfolio disponible. ¡Contáctame para ver ejemplos!',
-        status: ApplicationStatus.ACEPTADA,
-      },
-    }),
-    prisma.application.create({
-      data: {
-        jobId: jobs[3].id,
-        applicantId: u4.id,
-        message: 'Disponible los martes y jueves. Tengo mis propios productos de limpieza.',
-        status: ApplicationStatus.PENDIENTE,
-      },
-    }),
-    prisma.application.create({
-      data: {
-        jobId: jobs[4].id,
-        applicantId: u4.id,
-        message: 'Técnico certificado en gas. Puedo venir el miércoles por la mañana.',
-        status: ApplicationStatus.PENDIENTE,
-      },
-    }),
-    prisma.application.create({
-      data: {
-        jobId: jobs[2].id,
-        applicantId: u3.id,
-        message: 'Amplia experiencia en branding para hostelería. Te envío mi portfolio por email.',
-        status: ApplicationStatus.RECHAZADA,
-      },
-    }),
-    prisma.application.create({
-      data: {
-        jobId: jobs[7].id,
-        applicantId: u4.id,
-        message: 'Polivalente con 10 años de experiencia. Contrato mensual cerrado.',
-        status: ApplicationStatus.PENDIENTE,
-      },
-    }),
-  ]);
+  const applicationsData = [
+    {
+      jobIndex: 0,
+      applicantId: u2.id,
+      message: 'Tengo experiencia desarrollando landing pages con React y Tailwind. Podría tenerlo listo en 10 días.',
+      status: ApplicationStatus.PENDIENTE,
+    },
+    {
+      jobIndex: 0,
+      applicantId: u3.id,
+      message: 'Soy full-stack developer con portfolio disponible. ¡Contáctame para ver ejemplos!',
+      status: ApplicationStatus.ACEPTADA,
+    },
+    {
+      jobIndex: 3,
+      applicantId: u4.id,
+      message: 'Disponible los martes y jueves. Tengo mis propios productos de limpieza.',
+      status: ApplicationStatus.PENDIENTE,
+    },
+    {
+      jobIndex: 4,
+      applicantId: u4.id,
+      message: 'Técnico certificado en gas. Puedo venir el miércoles por la mañana.',
+      status: ApplicationStatus.PENDIENTE,
+    },
+    {
+      jobIndex: 2,
+      applicantId: u3.id,
+      message: 'Amplia experiencia en branding para hostelería. Te envío mi portfolio por email.',
+      status: ApplicationStatus.RECHAZADA,
+    },
+    {
+      jobIndex: 7,
+      applicantId: u4.id,
+      message: 'Polivalente con 10 años de experiencia. Contrato mensual cerrado.',
+      status: ApplicationStatus.PENDIENTE,
+    },
+  ];
+
+  // Idempotente: la clave única (jobId, applicantId) evita duplicados al re-ejecutar el seed.
+  const applications: Application[] = [];
+  for (const { jobIndex, ...rest } of applicationsData) {
+    const jobId = jobs[jobIndex].id;
+    applications.push(
+      await prisma.application.upsert({
+        where: { jobId_applicantId: { jobId, applicantId: rest.applicantId } },
+        update: {},
+        create: { jobId, ...rest },
+      })
+    );
+  }
 
   console.log('✅ Applications creadas');
 
-  const notifications = await Promise.all([
-    prisma.notification.create({
-      data: {
-        userId: u1.id,
-        type: NotificationType.NEW_APPLICATION,
-        title: 'Nueva postulación',
-        message: 'Carlos Pérez se ha postulado a tu trabajo "Desarrollar landing page para startup".',
-        relatedJobId: jobs[0].id,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: u3.id,
-        type: NotificationType.APPLICATION_ACCEPTED,
-        title: '¡Postulación aceptada!',
-        message: 'Tu postulación a "Desarrollar landing page para startup" ha sido aceptada.',
-        relatedJobId: jobs[0].id,
-      },
-    }),
-    prisma.notification.create({
-      data: {
-        userId: u3.id,
-        type: NotificationType.APPLICATION_REJECTED,
-        title: 'Postulación rechazada',
-        message: 'Tu postulación a "Diseño de logotipo para restaurante" ha sido rechazada.',
-        relatedJobId: jobs[2].id,
-      },
-    }),
-  ]);
+  const notificationsData = [
+    {
+      userId: u1.id,
+      type: NotificationType.NEW_APPLICATION,
+      title: 'Nueva postulación',
+      message: 'Carlos Pérez se ha postulado a tu trabajo "Desarrollar landing page para startup".',
+      jobIndex: 0,
+    },
+    {
+      userId: u3.id,
+      type: NotificationType.APPLICATION_ACCEPTED,
+      title: '¡Postulación aceptada!',
+      message: 'Tu postulación a "Desarrollar landing page para startup" ha sido aceptada.',
+      jobIndex: 0,
+    },
+    {
+      userId: u3.id,
+      type: NotificationType.APPLICATION_REJECTED,
+      title: 'Postulación rechazada',
+      message: 'Tu postulación a "Diseño de logotipo para restaurante" ha sido rechazada.',
+      jobIndex: 2,
+    },
+  ];
+
+  // Idempotente: se crea la notificación sólo si no existe una equivalente.
+  const notifications: Notification[] = [];
+  for (const { jobIndex, ...rest } of notificationsData) {
+    const relatedJobId = jobs[jobIndex].id;
+    const existing = await prisma.notification.findFirst({
+      where: { userId: rest.userId, type: rest.type, title: rest.title, relatedJobId },
+    });
+    notifications.push(existing ?? (await prisma.notification.create({ data: { ...rest, relatedJobId } })));
+  }
 
   console.log('✅ Notificaciones creadas');
 

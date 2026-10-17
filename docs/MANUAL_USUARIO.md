@@ -121,7 +121,7 @@ Tu perfil único contiene la siguiente información, que será visible tanto par
 | **Datos personales** | Nombre, apellidos, email, teléfono, foto de perfil |
 | **Datos profesionales** | Título profesional, resumen/biografía, años de experiencia |
 | **Datos de empresa** | Nombre empresa, RUC/CIF, sector, tamaño de empresa (si aplica) |
-| **Ubicación** | Ciudad, país, coordenadas (para búsquedas por radio) |
+| **Ubicación** | Ciudad, país o zona (texto libre) |
 | **Habilidades** | Lista de habilidades/tags (ej: "Carpintería", "Diseño UI", "React", "Marketing digital") |
 
 ### 3.2 Cómo editar mi perfil
@@ -145,7 +145,7 @@ Accede a **"Publicar trabajo"** y completa el formulario con estos campos:
 |-------|-------------|---------------|
 | **Título** | Nombre descriptivo del trabajo (ej: "Arreglar gotera en baño") | ✅ Sí |
 | **Descripción** | Detalle extenso de lo que necesitas, materiales, condiciones, etc. | ✅ Sí |
-| **Categoría** | Selecciona una categoría (Tecnología, Hogar, Educación, Salud, etc.) | ✅ Sí |
+| **Categoría** | Selecciona una categoría (Tecnología, Construcción, Diseño, Limpieza, Mantenimiento u Otros) | ✅ Sí |
 | **Ubicación** | Ciudad y dirección aproximada donde se realizará el trabajo | ✅ Sí |
 | **Presupuesto (rango)** | `budgetMin` y `budgetMax`: rango estimado de pago (ej: $50 - $100) | ✅ Sí |
 | **Fecha límite** | Fecha máxima en la que necesitas que se complete el trabajo | ❌ No |
@@ -216,11 +216,10 @@ Combina múltiples filtros para refinar tu búsqueda:
 
 | Filtro | Descripción |
 |--------|-------------|
-| **Categoría** | Selecciona una o varias categorías (Tecnología, Hogar, etc.) |
+| **Categoría** | Selecciona una categoría para filtrar los resultados (Tecnología, Construcción, Diseño, Limpieza, Mantenimiento u Otros) |
 | **Presupuesto** | Establece rango mínimo y máximo de pago |
-| **Radio (km)** | Busca trabajos dentro de un radio de kilómetros desde tu ubicación |
 | **Fecha límite** | Muestra trabajos cuya fecha límite esté antes de una fecha dada |
-| **Orden** | Ordenar por: más recientes, presupuesto (mayor/menor), cercanía |
+| **Orden** | Ordenar por: más recientes, presupuesto (mayor/menor) o fecha límite |
 
 ### 5.3 Ver detalle de un trabajo y perfil del publicador
 

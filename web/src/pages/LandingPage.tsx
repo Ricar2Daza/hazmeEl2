@@ -1,162 +1,137 @@
 import { Link, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import api from '@/lib/axios';
+import Logo from '@/components/ui/Logo';
+import ThemeToggle from '@/components/ui/ThemeToggle';
+
+interface PublicJob {
+  id: string;
+  title: string;
+  budgetMin: number;
+  budgetMax: number;
+  locationAddress: string;
+  category?: { name: string };
+  publisher?: { fullName: string; companyName?: string | null };
+}
 
 export default function LandingPage() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { data: jobs = [], isLoading } = useQuery({
+    queryKey: ['publicJobs', 'landing'],
+    queryFn: async () => {
+      const response = await api.get('/jobs', { params: { limit: 6, status: 'ABIERTO' } });
+      return response.data.data as PublicJob[];
+    },
+  });
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-primary-600">HazMe</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors px-4 py-2"
-              >
-                Iniciar sesión
-              </Link>
-              <Link
-                to="/register"
-                className="btn-primary"
-              >
-                Registrarse
-              </Link>
-            </div>
-          </div>
+    <div className="min-h-screen bg-bg">
+      <header className="sticky top-0 z-30 border-b border-line bg-card">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <Logo size="sm" linked={false} />
+          <nav aria-label="Cuenta" className="flex min-w-0 items-center gap-1.5 sm:gap-3">
+            <ThemeToggle />
+            <Link
+              to="/login"
+              className="px-2 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink sm:hidden"
+            >
+              Entrar
+            </Link>
+            <Link
+              to="/login"
+              className="hidden px-2 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink sm:inline-flex"
+            >
+              Iniciar sesión
+            </Link>
+            <Link to="/register" className="btn-primary min-h-10 px-3 sm:px-4">
+              Crear cuenta
+            </Link>
+          </nav>
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <main className="mx-auto grid max-w-7xl grid-cols-12 gap-x-6 gap-y-6 px-4 py-5 sm:px-6 sm:py-10 lg:gap-y-10 lg:px-8">
+        <section className="order-2 col-span-12 lg:order-1 lg:col-span-3">
+          <p className="text-xs font-semibold uppercase text-muted">HazmeEl2 / Bolsa de trabajo</p>
+          <h1 className="mt-4 text-xl font-semibold leading-snug text-ink">
+            Trabajo independiente, sin vueltas.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-ink-soft">
+            Encuentra proyectos publicados por otras personas o conecta con profesionales para resolver lo que necesitas.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link to="/register" className="btn-primary">
+              Empezar
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link to="/login" className="btn-secondary">
+              Ya tengo cuenta
+            </Link>
+          </div>
+          <div className="mt-8 border-t border-line pt-4 text-xs text-muted">
+            Publica un trabajo · Recibe propuestas · Elige a tu profesional
+          </div>
+        </section>
+
+        <section className="order-1 col-span-12 lg:order-2 lg:col-span-9" aria-labelledby="open-jobs-title">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-100 text-primary-700 text-sm font-medium mb-6">
-                <span>💼</span>
-                <span>Conectamos talentos con oportunidades</span>
-              </div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
-                Encuentra el trabajo
-                <span className="text-primary-600"> perfecto </span>
-                o publica tu proyecto
-              </h1>
-              <p className="text-lg text-gray-600 mb-8 max-w-xl">
-                HazMe es la plataforma donde profesionales independientes y empresas se encuentran. Publica trabajos, recibe postulaciones y gestiona proyectos en un solo lugar.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  to="/register"
-                  className="btn-primary text-base px-8 py-3"
-                >
-                  Comenzar gratis
-                </Link>
-                <Link
-                  to="/login"
-                  className="btn-secondary text-base px-8 py-3"
-                >
-                  Ya tengo cuenta
-                </Link>
-              </div>
+              <p className="text-xs font-medium text-muted">Oportunidades</p>
+              <h2 id="open-jobs-title" className="mt-1 text-xl font-semibold text-ink">Trabajos abiertos</h2>
             </div>
-            <div className="relative hidden lg:block">
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary-400 to-indigo-500 rounded-3xl blur-2xl opacity-20" />
-              <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                    <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center text-2xl">
-                      🔧
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-900">Desarrollador Web</div>
-                      <div className="text-sm text-gray-500">Presupuesto: $500 - $1.000</div>
-                    </div>
-                    <span className="badge-green">Activo</span>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">
-                      🎨
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-900">Diseñador Gráfico</div>
-                      <div className="text-sm text-gray-500">Presupuesto: $200 - $500</div>
-                    </div>
-                    <span className="badge-blue">12 postulantes</span>
-                  </div>
-                  <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">
-                      📱
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold text-gray-900">App Móvil React Native</div>
-                      <div className="text-sm text-gray-500">Presupuesto: $2.000 - $5.000</div>
-                    </div>
-                    <span className="badge-yellow">Urgente</span>
-                  </div>
+            <p className="text-sm text-muted">{isLoading ? 'Cargando...' : `${jobs.length} recientes`}</p>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-12 gap-3 sm:gap-4">
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className="col-span-12 animate-pulse rounded-lg border border-line bg-card p-6 sm:col-span-6 xl:col-span-4">
+                  <div className="h-4 w-1/3 rounded bg-subtle" />
+                  <div className="mt-5 h-5 w-3/4 rounded bg-subtle" />
+                  <div className="mt-3 h-4 w-1/2 rounded bg-subtle" />
+                  <div className="mt-8 h-4 w-2/3 rounded bg-subtle" />
                 </div>
-              </div>
+              ))}
             </div>
-          </div>
-        </div>
-      </section>
+          ) : jobs.length ? (
+            <div className="grid grid-cols-12 gap-3 sm:gap-4">
+              {jobs.map((job) => (
+                <Link
+                  key={job.id}
+                  to={`/trabajos/${job.id}`}
+                  className="group col-span-12 flex flex-col rounded-lg border border-line bg-card p-6 transition-colors hover:border-line-strong sm:col-span-6 xl:col-span-4"
+                >
+                  <div className="flex min-h-20 flex-col">
+                    <p className="text-sm font-medium text-ink-soft">
+                      {job.publisher?.companyName || job.publisher?.fullName || 'Publicante'}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold text-ink group-hover:text-primary-500">{job.title}</h3>
+                  </div>
+                  <div className="mt-5 space-y-2 border-t border-line pt-4 text-[13px] text-muted">
+                    <p>{job.category?.name || 'Trabajo'} <span aria-hidden="true">·</span> {job.locationAddress}</p>
+                    <p>${job.budgetMin.toLocaleString('es')}–${job.budgetMax.toLocaleString('es')}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-line bg-card px-6 py-10 text-sm text-ink-soft">
+              No hay trabajos abiertos ahora. Crea una cuenta para publicar el primero.
+            </div>
+          )}
+        </section>
+      </main>
 
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">¿Por qué elegir HazMe?</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Todo lo que necesitas para gestionar trabajos y postulaciones de manera simple y eficiente.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="card text-center">
-              <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
-                🚀
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Publica en minutos</h3>
-              <p className="text-gray-600">
-                Crea tu publicación de trabajo con un formulario simple y comienza a recibir postulaciones al instante.
-              </p>
-            </div>
-            <div className="card text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
-                ✅
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Gestiona postulantes</h3>
-              <p className="text-gray-600">
-                Revisa perfiles, lee mensajes y acepta o rechaza postulaciones con un solo clic.
-              </p>
-            </div>
-            <div className="card text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
-                🔔
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Notificaciones en vivo</h3>
-              <p className="text-gray-600">
-                Recibe alertas instantáneas cuando alguien se postula o cambia el estado de tu aplicación.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-              <span className="text-2xl font-bold text-primary-400">HazMe</span>
-              <p className="text-gray-400 mt-2">Conectando talentos con oportunidades</p>
-            </div>
-            <div className="text-sm text-gray-400">
-              © {new Date().getFullYear()} HazMe. Todos los derechos reservados.
-            </div>
-          </div>
+      <footer className="border-t border-line bg-card">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+          <Logo size="sm" linked={false} />
+          <p className="text-xs text-muted">Conectando personas y oportunidades</p>
         </div>
       </footer>
     </div>

@@ -1,5 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
+﻿import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Check, ExternalLink, MessageCircle, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 
@@ -59,6 +60,7 @@ export default function ManageApplicantsPage() {
     onSuccess: () => {
       toast.success('Postulación aceptada');
       queryClient.invalidateQueries({ queryKey: ['jobApplications', id] });
+      queryClient.invalidateQueries({ queryKey: ['job', id] });
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || 'Error');
@@ -95,17 +97,17 @@ export default function ManageApplicantsPage() {
       <div>
         <Link
           to="/mis-publicaciones"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary-600 mb-4"
+          className="mb-4 inline-flex items-center gap-2 text-sm text-ink-soft transition-colors hover:text-ink"
         >
           ← Volver a mis publicaciones
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-semibold text-ink">
           Postulantes: {job?.title || 'Trabajo'}
         </h1>
-        <div className="flex flex-wrap gap-3 mt-2">
-          <span className="badge-yellow">⏳ {pendingCount} pendientes</span>
-          <span className="badge-green">✅ {acceptedCount} aceptados</span>
-          <span className="badge-blue">👥 {applicants.length} total</span>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <span className="badge-yellow">{pendingCount} pendientes</span>
+          <span className="badge-green">{acceptedCount} aceptados</span>
+          <span className="badge-blue">{applicants.length} total</span>
         </div>
       </div>
 
@@ -114,10 +116,10 @@ export default function ManageApplicantsPage() {
           {[...Array(3)].map((_, i) => (
             <div key={i} className="card animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-gray-200 rounded-full" />
+                <div className="w-14 h-14 bg-line rounded-full" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-gray-200 rounded w-1/3" />
-                  <div className="h-4 bg-gray-200 rounded w-1/2" />
+                  <div className="h-5 bg-line rounded w-1/3" />
+                  <div className="h-4 bg-line rounded w-1/2" />
                 </div>
               </div>
             </div>
@@ -125,9 +127,8 @@ export default function ManageApplicantsPage() {
         </div>
       ) : applicants.length === 0 ? (
         <div className="card text-center py-16">
-          <p className="text-6xl mb-4">👥</p>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Aún no hay postulantes</h3>
-          <p className="text-gray-600 max-w-md mx-auto mb-6">
+          <h3 className="text-lg font-semibold text-ink mb-2">Aún no hay postulantes</h3>
+          <p className="text-ink-soft max-w-md mx-auto mb-6">
             Espera a que profesionales interesados se postulen a tu trabajo.
           </p>
           <Link to={`/trabajos/${id}`} className="btn-secondary">
@@ -140,53 +141,53 @@ export default function ManageApplicantsPage() {
             <div key={app.id} className="card">
               <div className="flex flex-col lg:flex-row gap-6">
                 <div className="flex items-start gap-4 flex-1">
-                  <div className="w-14 h-14 bg-primary-600 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                  <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-500 text-xl font-semibold text-white">
                     {app.applicant?.fullName?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900 text-lg">
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-2 flex flex-wrap items-center gap-3">
+                      <h3 className="text-lg font-semibold text-ink">
                         {app.applicant?.fullName || 'Postulante'}
                       </h3>
                       <span className={`badge ${statusBadge[app.status]}`}>
                         {app.status}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted">
                         Postulado el {formatDate(app.createdAt)}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+                    <div className="mb-3 grid grid-cols-1 gap-2 text-sm text-ink-soft sm:grid-cols-2">
                       {app.applicant?.email && (
-                        <div className="flex items-center gap-1.5">
-                          <span>📧</span>
-                          <a href={`mailto:${app.applicant.email}`} className="hover:text-primary-600 truncate">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-[11px] font-medium uppercase text-muted">Email</span>
+                          <a href={`mailto:${app.applicant.email}`} className="truncate hover:text-primary-500">
                             {app.applicant.email}
                           </a>
                         </div>
                       )}
                       {app.applicant?.phone && (
-                        <div className="flex items-center gap-1.5">
-                          <span>📱</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-[11px] font-medium uppercase text-muted">Teléfono</span>
                           <span>{app.applicant.phone}</span>
                         </div>
                       )}
                       {app.applicant?.companyName && (
-                        <div className="flex items-center gap-1.5">
-                          <span>🏢</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-[11px] font-medium uppercase text-muted">Empresa</span>
                           <span>{app.applicant.companyName}</span>
                         </div>
                       )}
                       {app.applicant?.experienceYears != null && (
-                        <div className="flex items-center gap-1.5">
-                          <span>💼</span>
-                          <span>{app.applicant.experienceYears} años de experiencia</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-[11px] font-medium uppercase text-muted">Experiencia</span>
+                          <span>{app.applicant.experienceYears} años</span>
                         </div>
                       )}
                     </div>
 
                     {app.applicant?.skills && app.applicant.skills.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
+                      <div className="mb-3 flex flex-wrap gap-1.5">
                         {app.applicant.skills.map((skill, i) => (
                           <span key={i} className="badge-blue">{skill}</span>
                         ))}
@@ -194,15 +195,15 @@ export default function ManageApplicantsPage() {
                     )}
 
                     {app.message && (
-                      <div className="bg-gray-50 rounded-lg p-4 mt-3">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Mensaje del postulante:</p>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{app.message}</p>
+                      <div className="mt-3 rounded-lg border border-line bg-subtle p-4">
+                        <p className="mb-1 text-xs font-medium text-muted">Mensaje del postulante:</p>
+                        <p className="whitespace-pre-wrap text-sm text-ink-soft">{app.message}</p>
                       </div>
                     )}
 
                     {app.applicant?.bio && (
-                      <div className="mt-3 text-sm text-gray-600">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Bio:</p>
+                      <div className="mt-3 text-sm text-ink-soft">
+                        <p className="mb-1 text-xs font-medium text-muted">Bio:</p>
                         <p className="line-clamp-3">{app.applicant.bio}</p>
                       </div>
                     )}
@@ -213,29 +214,36 @@ export default function ManageApplicantsPage() {
                           href={app.applicant.portfolioUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-primary-600 hover:underline inline-flex items-center gap-1"
+                          className="inline-flex items-center gap-1 text-sm hover:underline"
                         >
-                          🔗 Ver portfolio
+                          <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                          Ver portfolio
                         </a>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="flex lg:flex-col gap-2 lg:w-40 flex-shrink-0">
+                <div className="flex shrink-0 flex-col gap-2 lg:w-40">
+                  <Link to={`/mensajes/${app.id}`} className="btn-primary text-center">
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    Abrir chat
+                  </Link>
                   <button
                     onClick={() => acceptMutation.mutate(app.id)}
-                    disabled={app.status !== 'PENDIENTE' || acceptMutation.isPending}
+                    disabled={app.status !== 'PENDIENTE' || job?.status !== 'ABIERTO' || acceptMutation.isPending}
                     className="btn-success flex-1 lg:flex-none"
                   >
-                    ✅ Aceptar
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                    {app.status === 'ACEPTADA' ? 'Elegido' : job?.status !== 'ABIERTO' ? 'Trabajo asignado' : 'Aceptar'}
                   </button>
                   <button
                     onClick={() => rejectMutation.mutate(app.id)}
                     disabled={app.status !== 'PENDIENTE' || rejectMutation.isPending}
                     className="btn-danger flex-1 lg:flex-none"
                   >
-                    ❌ Rechazar
+                    <X className="h-4 w-4" aria-hidden="true" />
+                    Rechazar
                   </button>
                 </div>
               </div>

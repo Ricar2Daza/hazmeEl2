@@ -2,18 +2,40 @@ import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import {
+  Bell,
+  Briefcase,
+  ClipboardList,
+  LogOut,
+  Menu,
+  MessageSquare,
+  PlusCircle,
+  Search,
+  User,
+  X,
+} from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { connectSocket, onSocketEvent, getSocket } from '@/lib/socket';
+import Logo from '@/components/ui/Logo';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/trabajos/buscar', label: 'Buscar trabajos', icon: '🔍' },
-  { to: '/trabajos/publicar', label: 'Publicar trabajo', icon: '📝' },
-  { to: '/mis-publicaciones', label: 'Mis publicaciones', icon: '📋' },
-  { to: '/mis-postulaciones', label: 'Mis postulaciones', icon: '📨' },
-  { to: '/perfil', label: 'Perfil', icon: '👤' },
-  { to: '/notificaciones', label: 'Notificaciones', icon: '🔔' },
+  { to: '/dashboard', label: 'Inicio', icon: Briefcase },
+  { to: '/trabajos/buscar', label: 'Buscar trabajos', icon: Search },
+  { to: '/trabajos/publicar', label: 'Publicar trabajo', icon: PlusCircle },
+  { to: '/mis-publicaciones', label: 'Mis publicaciones', icon: ClipboardList },
+  { to: '/mis-postulaciones', label: 'Mis postulaciones', icon: ClipboardList },
+  { to: '/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { to: '/perfil', label: 'Perfil', icon: User },
+  { to: '/notificaciones', label: 'Notificaciones', icon: Bell },
+];
+
+const mobileItems = [
+  { to: '/trabajos/buscar', label: 'Buscar', icon: Search },
+  { to: '/trabajos/publicar', label: 'Publicar', icon: PlusCircle },
+  { to: '/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { to: '/mis-postulaciones', label: 'Actividad', icon: ClipboardList },
 ];
 
 export default function AppLayout() {
@@ -49,7 +71,7 @@ export default function AppLayout() {
     });
 
     const off2 = onSocketEvent('application_accepted', (data: any) => {
-      toast.success(`Tu postulación en ${data?.jobTitle || ''} fue ACEPTADA 🎉`);
+      toast.success(`Tu postulación en ${data?.jobTitle || ''} fue aceptada`);
       increment();
       queryClient.invalidateQueries({ queryKey: ['myApplications'] });
     });
@@ -73,34 +95,32 @@ export default function AppLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200 fixed top-0 left-0 right-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
+    <div className="min-h-screen bg-bg">
+      <nav className="fixed inset-x-0 top-0 z-40 border-b border-line bg-card">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-14 items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
               <button
-                className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 mr-2"
+                aria-label={sidebarOpen ? 'Cerrar navegación' : 'Abrir navegación'}
+                aria-expanded={sidebarOpen}
+                className="grid min-h-10 w-10 shrink-0 place-items-center rounded-lg text-ink-mid transition-colors hover:bg-subtle md:hidden"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Link to="/dashboard" className="flex items-center">
-                <span className="text-2xl font-bold text-primary-600">HazMe</span>
-              </Link>
+              <Logo size="sm" className="md:hidden" />
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <ThemeToggle />
               <Link
                 to="/notificaciones"
-                className="relative p-2 rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Notificaciones"
+                className="relative grid h-10 w-10 place-items-center rounded-lg text-ink-mid transition-colors hover:bg-subtle hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
+                <Bell className="h-5 w-5" aria-hidden="true" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                  <span className="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-semibold text-white">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -109,44 +129,47 @@ export default function AppLayout() {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-label="Menú de usuario"
+                  aria-expanded={dropdownOpen}
+                  className="flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 >
-                  <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-primary-500 text-sm font-medium text-white">
                     {user?.fullName?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <span className="hidden sm:block text-sm font-medium text-gray-700">
+                  </span>
+                  <span className="hidden max-w-32 truncate text-sm font-medium text-ink-soft sm:block">
                     {user?.fullName || 'Usuario'}
                   </span>
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border border-line bg-card py-2">
                     <Link
                       to="/perfil"
                       onClick={() => setDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="block px-4 py-2 text-sm text-ink-soft transition-colors hover:bg-subtle"
                     >
                       Mi perfil
                     </Link>
                     <Link
                       to="/mis-publicaciones"
                       onClick={() => setDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="block px-4 py-2 text-sm text-ink-soft transition-colors hover:bg-subtle"
                     >
                       Mis publicaciones
                     </Link>
                     <Link
                       to="/mis-postulaciones"
                       onClick={() => setDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      className="block px-4 py-2 text-sm text-ink-soft transition-colors hover:bg-subtle"
                     >
                       Mis postulaciones
                     </Link>
-                    <div className="border-t border-gray-100 my-1" />
+                    <div className="my-1 border-t border-line" />
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-ink-soft transition-colors hover:bg-subtle"
                     >
+                      <LogOut className="h-4 w-4" aria-hidden="true" />
                       Cerrar sesión
                     </button>
                   </div>
@@ -157,37 +180,41 @@ export default function AppLayout() {
         </div>
       </nav>
 
-      <div className="flex pt-16">
+      <div className="flex pt-14">
         <aside
           className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:translate-x-0 fixed md:sticky top-16 left-0 z-30 w-64 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 transition-transform duration-300 overflow-y-auto`}
+          } fixed left-0 top-14 z-30 h-[calc(100vh-3.5rem)] w-60 overflow-y-auto border-r border-line bg-card transition-transform duration-200 md:sticky md:translate-x-0`}
         >
-          <nav className="p-4 space-y-1">
+          <div className="hidden border-b border-line px-4 py-3 md:block">
+            <Logo size="md" />
+          </div>
+          <nav aria-label="Navegación principal" className="space-y-1 p-3">
             {navItems.map((item) => {
               const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.to}
                   to={item.to}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-accent-50 text-accent-600 dark:bg-accent-900/30 dark:text-accent-400'
+                      : 'text-ink-soft hover:bg-subtle hover:text-ink'
                   }`}
                 >
-                  <span className="text-lg">{item.icon}</span>
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {item.label}
                 </Link>
               );
             })}
-            <div className="pt-4 mt-4 border-t border-gray-200">
+            <div className="mt-4 border-t border-line pt-4">
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                className="flex min-h-10 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-ink-soft transition-colors hover:bg-subtle hover:text-ink"
               >
-                <span className="text-lg">🚪</span>
+                <LogOut className="h-4 w-4" aria-hidden="true" />
                 Cerrar sesión
               </button>
             </div>
@@ -196,17 +223,41 @@ export default function AppLayout() {
 
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+            className="fixed inset-0 z-20 bg-black/50 md:hidden"
             onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
           />
         )}
 
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+        <main className="min-w-0 flex-1 px-4 pb-24 pt-5 sm:px-6 sm:pt-8 md:pb-8 lg:px-8">
+          <div className="mx-auto max-w-7xl">
             <Outlet />
           </div>
         </main>
       </div>
+
+      <nav
+        aria-label="Navegación móvil"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
+      >
+        {mobileItems.map((item) => {
+          const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 px-1 text-center text-[11px] font-medium transition-colors ${
+                isActive ? 'text-accent-600 dark:text-accent-400' : 'text-muted'
+              }`}
+            >
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }

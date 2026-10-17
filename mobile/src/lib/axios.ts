@@ -109,6 +109,13 @@ export const applicationsApi = {
   reject: (id: string) => api.patch(`/applications/${id}/reject`),
 };
 
+export const chatApi = {
+  conversations: () => api.get('/chat/conversations'),
+  messages: (applicationId: string) => api.get(`/chat/${applicationId}/messages`),
+  send: (applicationId: string, content: string) =>
+    api.post(`/chat/${applicationId}/messages`, { content }),
+};
+
 export const categoriesApi = {
   list: () => api.get('/categories'),
 };

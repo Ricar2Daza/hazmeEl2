@@ -14,6 +14,7 @@ import ManageApplicantsPage from '@/pages/jobs/ManageApplicantsPage';
 import MyApplicationsPage from '@/pages/applications/MyApplicationsPage';
 import ProfilePage from '@/pages/profile/ProfilePage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
+import ChatPage from '@/pages/chat/ChatPage';
 
 export default function App() {
   return (
@@ -40,6 +41,8 @@ export default function App() {
         <Route path="/mis-postulaciones" element={<MyApplicationsPage />} />
         <Route path="/perfil" element={<ProfilePage />} />
         <Route path="/notificaciones" element={<NotificationsPage />} />
+        <Route path="/mensajes" element={<ChatPage />} />
+        <Route path="/mensajes/:applicationId" element={<ChatPage />} />
       </Route>
 
       <Route path="*" element={<LandingPage />} />

@@ -1,9 +1,10 @@
-import { Link, useNavigate, Navigate } from 'react-router-dom';
+﻿import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { registerSchema, RegisterInput } from '@/lib/schemas/zodSchemas';
 import { useAuthStore } from '@/store/authStore';
+import Logo from '@/components/ui/Logo';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -33,14 +34,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-bg p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block">
-            <span className="text-3xl font-bold text-primary-600">HazMe</span>
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900 mt-6">Crear cuenta</h1>
-          <p className="text-gray-600 mt-2">Únete a HazMe y comienza hoy mismo</p>
+        <div className="mb-8 text-center">
+          <Logo linked={false} />
+          <h1 className="mt-6 text-xl font-semibold text-ink">Crear cuenta</h1>
+          <p className="mt-2 text-sm text-ink-soft">Únete a HazmeEl2 y comienza hoy mismo</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="card space-y-5">
@@ -53,7 +52,7 @@ export default function RegisterPage() {
               placeholder="Juan Pérez"
             />
             {errors.fullName && (
-              <p className="text-red-600 text-sm mt-1">{errors.fullName.message}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.fullName.message}</p>
             )}
           </div>
 
@@ -66,7 +65,7 @@ export default function RegisterPage() {
               placeholder="tu@email.com"
             />
             {errors.email && (
-              <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.email.message}</p>
             )}
           </div>
 
@@ -79,7 +78,7 @@ export default function RegisterPage() {
               placeholder="Mínimo 8 caracteres"
             />
             {errors.password && (
-              <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+              <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.password.message}</p>
             )}
           </div>
 
@@ -101,9 +100,9 @@ export default function RegisterPage() {
             {isSubmitting ? 'Registrando...' : 'Crear cuenta'}
           </button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm text-ink-soft">
             ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="text-primary-600 font-medium hover:underline">
+            <Link to="/login" className="font-medium hover:underline">
               Inicia sesión
             </Link>
           </p>

@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { ClipboardList, PlusCircle, Search, User } from 'lucide-react';
 import api from '@/lib/axios';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useAuthStore } from '@/store/authStore';
@@ -7,31 +8,39 @@ import { useAuthStore } from '@/store/authStore';
 interface StatCardProps {
   title: string;
   value: number | string;
-  icon: string;
-  color: string;
   to?: string;
+  className?: string;
 }
 
-function StatCard({ title, value, icon, color, to }: StatCardProps) {
-  const content = (
-    <div className="card hover:-translate-y-1 transition-transform cursor-pointer">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
-        </div>
-        <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center text-3xl`}>
-          {icon}
-        </div>
+function StatCard({ title, value, to, className = '' }: StatCardProps) {
+  const card = (
+    <div className="card grid min-h-28 grid-cols-12 items-end gap-3 transition-colors hover:border-line-strong active:border-line-strong">
+      <div className="col-span-8">
+        <p className="text-sm font-medium text-ink-soft">{title}</p>
       </div>
+      <p className="col-span-4 text-right text-3xl font-semibold text-ink">{value}</p>
     </div>
   );
 
   if (to) {
-    return <Link to={to}>{content}</Link>;
+    return (
+      <Link
+        to={to}
+        className={`rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${className}`}
+      >
+        {card}
+      </Link>
+    );
   }
-  return content;
+  return <div className={className}>{card}</div>;
 }
+
+const quickLinks = [
+  { to: '/trabajos/buscar', title: 'Buscar trabajos', description: 'Explora oportunidades disponibles', icon: Search },
+  { to: '/trabajos/publicar', title: 'Publicar trabajo', description: 'Crea una nueva publicación', icon: PlusCircle },
+  { to: '/mis-publicaciones', title: 'Ver publicaciones', description: 'Gestiona tus trabajos activos', icon: ClipboardList },
+  { to: '/perfil', title: 'Editar perfil', description: 'Actualiza tu información', icon: User },
+];
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
@@ -69,86 +78,77 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Hola, {user?.fullName?.split(' ')[0] || 'Usuario'} 👋
+        <p className="text-xs font-medium uppercase text-muted">Panel</p>
+        <h1 className="mt-2 text-2xl font-semibold text-ink">
+          Hola, {user?.fullName?.split(' ')[0] || 'Usuario'}
         </h1>
-        <p className="text-gray-600 mt-1">Bienvenido a tu panel de control</p>
+        <p className="text-ink-soft mt-1">Bienvenido a tu panel de control</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-12 gap-3 sm:gap-4">
         <StatCard
           title="Mis publicaciones"
           value={jobsCount}
-          icon="📋"
-          color="bg-blue-100"
           to="/mis-publicaciones"
+          className="col-span-12 sm:col-span-6 xl:col-span-4"
         />
         <StatCard
           title="Mis postulaciones"
           value={appsCount}
-          icon="📨"
-          color="bg-green-100"
           to="/mis-postulaciones"
+          className="col-span-12 sm:col-span-6 xl:col-span-4"
         />
         <StatCard
           title="Notificaciones sin leer"
           value={notifCount}
-          icon="🔔"
-          color="bg-yellow-100"
           to="/notificaciones"
+          className="col-span-12 sm:col-span-6 xl:col-span-4"
         />
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Accesos rápidos</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link to="/trabajos/buscar" className="card hover:-translate-y-1 transition-transform">
-            <div className="text-3xl mb-3">🔍</div>
-            <h3 className="font-semibold text-gray-900">Buscar trabajos</h3>
-            <p className="text-sm text-gray-500 mt-1">Explora oportunidades disponibles</p>
-          </Link>
-          <Link to="/trabajos/publicar" className="card hover:-translate-y-1 transition-transform">
-            <div className="text-3xl mb-3">📝</div>
-            <h3 className="font-semibold text-gray-900">Publicar trabajo</h3>
-            <p className="text-sm text-gray-500 mt-1">Crea una nueva publicación</p>
-          </Link>
-          <Link to="/mis-publicaciones" className="card hover:-translate-y-1 transition-transform">
-            <div className="text-3xl mb-3">📊</div>
-            <h3 className="font-semibold text-gray-900">Ver publicaciones</h3>
-            <p className="text-sm text-gray-500 mt-1">Gestiona tus trabajos activos</p>
-          </Link>
-          <Link to="/perfil" className="card hover:-translate-y-1 transition-transform">
-            <div className="text-3xl mb-3">👤</div>
-            <h3 className="font-semibold text-gray-900">Editar perfil</h3>
-            <p className="text-sm text-gray-500 mt-1">Actualiza tu información</p>
-          </Link>
+        <h2 className="mb-4 text-lg font-semibold text-ink">Accesos rápidos</h2>
+        <div className="grid grid-cols-12 gap-3 sm:gap-4">
+          {quickLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="card col-span-12 transition-colors hover:border-line-strong active:border-line-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 sm:col-span-6 xl:col-span-3"
+              >
+                <Icon className="h-6 w-6 text-accent-500" aria-hidden="true" />
+                <h3 className="mt-3 text-base font-semibold text-ink">{link.title}</h3>
+                <p className="mt-2 text-sm text-muted">{link.description}</p>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="card">
+      <div className="grid grid-cols-12 gap-4">
+        <div className="card col-span-12 lg:col-span-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Últimas publicaciones</h3>
-            <Link to="/mis-publicaciones" className="text-sm text-primary-600 hover:underline">
+            <h3 className="font-semibold text-ink">Últimas publicaciones</h3>
+              <Link to="/mis-publicaciones" className="text-sm font-medium text-link hover:underline">
               Ver todas →
             </Link>
           </div>
           {jobsCount === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-4xl mb-2">📭</p>
+            <div className="text-center py-8 text-muted">
               <p>Aún no has publicado trabajos</p>
               <Link to="/trabajos/publicar" className="btn-primary mt-4">
                 Publicar el primero
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-line border-t border-line">
               {myJobs?.slice(0, 3).map((job: any) => (
-                <div key={job.id} className="p-3 bg-gray-50 rounded-lg">
+                <div key={job.id} className="py-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{job.title}</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="font-medium text-ink truncate">{job.title}</p>
+                      <p className="text-sm text-muted mt-1">
                         ${job.budgetMin} - ${job.budgetMax}
                       </p>
                     </div>
@@ -166,29 +166,28 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="card">
+        <div className="card col-span-12 lg:col-span-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Mis últimas postulaciones</h3>
-            <Link to="/mis-postulaciones" className="text-sm text-primary-600 hover:underline">
+            <h3 className="font-semibold text-ink">Mis últimas postulaciones</h3>
+              <Link to="/mis-postulaciones" className="text-sm font-medium text-link hover:underline">
               Ver todas →
             </Link>
           </div>
           {appsCount === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-4xl mb-2">💼</p>
+            <div className="text-center py-8 text-muted">
               <p>Aún no te has postulado a ningún trabajo</p>
               <Link to="/trabajos/buscar" className="btn-primary mt-4">
                 Buscar oportunidades
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y divide-line border-t border-line">
               {myApplications?.slice(0, 3).map((app: any) => (
-                <div key={app.id} className="p-3 bg-gray-50 rounded-lg">
+                <div key={app.id} className="py-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{app.job?.title || 'Trabajo'}</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="font-medium text-ink truncate">{app.job?.title || 'Trabajo'}</p>
+                      <p className="text-sm text-muted mt-1">
                         Publicado por {app.job?.publisher?.fullName || '—'}
                       </p>
                     </div>

@@ -12,7 +12,11 @@
     "build:all": "npm --prefix ./backend run build && npm --prefix ./web run build",
     "prisma:migrate": "npm --prefix ./backend run prisma:migrate",
     "prisma:seed": "npm --prefix ./backend run prisma:seed",
-    "prisma:reset": "npm --prefix ./backend run prisma:reset"
+    "prisma:reset": "npm --prefix ./backend run prisma:reset",
+    "test:unit": "npm --prefix ./backend run test:unit",
+    "test:integration": "npm --prefix ./backend run test:integration",
+    "test:e2e": "npm --prefix ./web run test:e2e",
+    "test": "npm run test:unit && npm run test:integration && npm run test:e2e"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

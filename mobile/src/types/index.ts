@@ -14,8 +14,6 @@ export interface User {
   experienceYears?: number | null;
   skills: string[];
   locationAddress?: string | null;
-  locationLat?: number | null;
-  locationLng?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -33,8 +31,6 @@ export interface Job {
   title: string;
   description: string;
   locationAddress: string;
-  locationLat: number;
-  locationLng: number;
   budgetMin: number;
   budgetMax: number;
   deadlineDate: string;
@@ -60,6 +56,23 @@ export interface Application {
   updatedAt: string;
   job?: Job;
   applicant?: User;
+}
+
+export interface ChatMessage {
+  id: string;
+  applicationId: string;
+  senderId: string;
+  content: string;
+  createdAt: string;
+  sender: Pick<User, 'id' | 'fullName'>;
+}
+
+export interface ChatConversation extends Omit<Application, 'job' | 'applicant'> {
+  job: Pick<Job, 'id' | 'title' | 'status' | 'publisherId'> & {
+    publisher: Pick<User, 'id' | 'fullName'>;
+  };
+  applicant: Pick<User, 'id' | 'fullName'>;
+  chatMessages: ChatMessage[];
 }
 
 export interface Notification {

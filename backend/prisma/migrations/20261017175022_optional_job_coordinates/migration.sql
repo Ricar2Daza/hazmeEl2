@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Job" ALTER COLUMN "locationLat" DROP NOT NULL,
+ALTER COLUMN "locationLng" DROP NOT NULL;

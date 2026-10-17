@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus, Save, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { editProfileSchema, EditProfileInput } from '@/lib/schemas/zodSchemas';
 import { useAuthStore, User } from '@/store/authStore';
@@ -18,8 +19,6 @@ export default function ProfilePage() {
     experienceYears: user?.experienceYears || null,
     skills: user?.skills || [],
     locationAddress: user?.locationAddress || null,
-    locationLat: user?.locationLat ?? null,
-    locationLng: user?.locationLng ?? null,
   };
 
   const {
@@ -47,8 +46,6 @@ export default function ProfilePage() {
         experienceYears: user.experienceYears ?? null,
         skills: user.skills || [],
         locationAddress: user.locationAddress ?? null,
-        locationLat: user.locationLat ?? null,
-        locationLng: user.locationLng ?? null,
       });
     }
   }, [user, reset]);
@@ -83,21 +80,21 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mi perfil</h1>
-        <p className="text-gray-600 mt-1">Actualiza tu información personal y profesional</p>
+        <h1 className="text-2xl font-semibold text-ink">Mi perfil</h1>
+        <p className="text-ink-soft mt-1">Actualiza tu información personal y profesional</p>
       </div>
 
       <div className="card">
-        <div className="flex items-center gap-4 pb-6 mb-6 border-b border-gray-100">
-          <div className="w-20 h-20 bg-primary-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
+        <div className="mb-6 flex items-center gap-4 border-b border-line pb-6">
+          <span className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-primary-500 text-3xl font-semibold text-white">
             {user?.fullName?.charAt(0).toUpperCase() || 'U'}
-          </div>
+          </span>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{user?.fullName || 'Usuario'}</h2>
-            <p className="text-gray-500">{user?.email}</p>
+            <h2 className="text-xl font-semibold text-ink">{user?.fullName || 'Usuario'}</h2>
+            <p className="text-muted">{user?.email}</p>
             {!user?.emailVerified && (
               <span className="badge-yellow mt-1 inline-block">
-                ⚠️ Email no verificado
+                Email no verificado
               </span>
             )}
           </div>
@@ -113,7 +110,7 @@ export default function ProfilePage() {
                 className="input"
               />
               {errors.fullName && (
-                <p className="text-red-600 text-sm mt-1">{errors.fullName.message}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.fullName.message}</p>
               )}
             </div>
             <div>
@@ -147,7 +144,7 @@ export default function ProfilePage() {
                 placeholder="5"
               />
               {errors.experienceYears && (
-                <p className="text-red-600 text-sm mt-1">{errors.experienceYears.message}</p>
+                <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.experienceYears.message}</p>
               )}
             </div>
           </div>
@@ -189,25 +186,27 @@ export default function ProfilePage() {
                 placeholder="Ej: React, Node.js, Diseño UI... (Enter para agregar)"
               />
               <button type="button" onClick={addSkill} className="btn-secondary">
-                  Agregar
-                </button>
-              </div>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Agregar
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {currentSkills.length === 0 ? (
-                <p className="text-sm text-gray-500">Aún no has agregado habilidades</p>
+                <p className="text-sm text-muted">Aún no has agregado habilidades</p>
               ) : (
                 currentSkills.map((skill: string, i: number) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1 badge-blue py-1"
+                    className="badge-blue py-1"
                   >
                     {skill}
                     <button
                       type="button"
                       onClick={() => removeSkill(skill)}
-                      className="ml-1 hover:text-red-600 font-bold"
+                      aria-label={`Quitar ${skill}`}
+                      className="ml-1 rounded text-ink-soft transition-colors hover:text-red-600 dark:hover:text-red-400"
                     >
-                      ×
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   </span>
                 ))
@@ -216,41 +215,19 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="label">Ubicación - Dirección</label>
+            <label className="label">Ubicación</label>
             <input
               type="text"
               {...register('locationAddress')}
               className="input"
-              placeholder="Dirección completa"
+              placeholder="Ciudad / País o zona (Ej: Buenos Aires, Argentina)"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="label">Latitud</label>
-              <input
-                type="number"
-                step="any"
-                {...register('locationLat', { valueAsNumber: true })}
-                className="input"
-                placeholder="-34.6037"
-              />
-            </div>
-            <div>
-              <label className="label">Longitud</label>
-              <input
-                type="number"
-                step="any"
-                {...register('locationLng', { valueAsNumber: true })}
-                className="input"
-                placeholder="-58.3816"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-gray-100">
+          <div className="border-t border-line pt-4">
             <button type="submit" disabled={isSubmitting} className="btn-primary w-full sm:w-auto">
-              {isSubmitting ? 'Guardando...' : '💾 Guardar cambios'}
+              <Save className="h-4 w-4" aria-hidden="true" />
+              {isSubmitting ? 'Guardando...' : 'Guardar cambios'}
             </button>
           </div>
         </form>

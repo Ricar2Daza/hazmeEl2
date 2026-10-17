@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { JobStatus } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
-import { validate, authenticateJWT } from '../middlewares';
+import { validate, authenticateJWT, optionalAuthenticateJWT } from '../middlewares';
 import * as jobsService from '../services/jobs.service';
 
 const createJobSchema = z.object({
@@ -9,8 +9,6 @@ const createJobSchema = z.object({
     title: z.string().min(5, 'Título debe tener al menos 5 caracteres'),
     description: z.string().min(20, 'Descripción debe tener al menos 20 caracteres'),
     locationAddress: z.string().min(5, 'Dirección requerida'),
-    locationLat: z.number(),
-    locationLng: z.number(),
     budgetMin: z.number().int().min(0),
     budgetMax: z.number().int().min(0),
     deadlineDate: z.coerce.date(),
@@ -25,8 +23,6 @@ const updateJobSchema = z.object({
       title: z.string().min(5).optional(),
       description: z.string().min(20).optional(),
       locationAddress: z.string().min(5).optional(),
-      locationLat: z.number().optional(),
-      locationLng: z.number().optional(),
       budgetMin: z.number().int().min(0).optional(),
       budgetMax: z.number().int().min(0).optional(),
       deadlineDate: z.coerce.date().optional(),
@@ -44,9 +40,6 @@ const listJobsSchema = z.object({
   query: z.object({
     search: z.string().optional(),
     category: z.string().optional(),
-    lat: z.string().optional(),
-    lng: z.string().optional(),
-    radius: z.string().optional(),
     budgetMin: z.string().optional(),
     budgetMax: z.string().optional(),
     deadlineFrom: z.string().optional(),
@@ -125,6 +118,7 @@ const mine = [
 ];
 
 const list = [
+  optionalAuthenticateJWT,
   validate(listJobsSchema),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

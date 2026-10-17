@@ -1,0 +1,20 @@
+{
+  "name": "hazme-mvp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HazMe - MVP Bolsa de Empleo (Backend + Web + Móvil)",
+  "scripts": {
+    "install-all": "npm --prefix ./backend install && npm --prefix ./web install && npm --prefix ./mobile install",
+    "dev:backend": "npm --prefix ./backend run dev",
+    "dev:web": "npm --prefix ./web run dev",
+    "dev:mobile": "npm --prefix ./mobile run start",
+    "dev": "concurrently -n BACKEND,WEB -c blue,green \"npm:dev:backend\" \"npm:dev:web\"",
+    "build:all": "npm --prefix ./backend run build && npm --prefix ./web run build",
+    "prisma:migrate": "npm --prefix ./backend run prisma:migrate",
+    "prisma:seed": "npm --prefix ./backend run prisma:seed",
+    "prisma:reset": "npm --prefix ./backend run prisma:reset"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

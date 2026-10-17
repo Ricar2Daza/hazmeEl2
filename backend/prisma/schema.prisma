@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  ABIERTO
+  EN_PROGRESO
+  FINALIZADO
+  CANCELADO
+}
+
+enum ApplicationStatus {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+}
+
+enum NotificationType {
+  NEW_APPLICATION
+  APPLICATION_ACCEPTED
+  APPLICATION_REJECTED
+  JOB_UPDATED
+}
+
+model User {
+  id               String         @id @default(uuid())
+  email            String         @unique
+  passwordHash     String
+  fullName         String
+  emailVerified    Boolean        @default(false)
+  verificationToken String?
+  refreshToken     String?
+  phone            String?
+  companyName      String?
+  portfolioUrl     String?
+  bio              String?
+  experienceYears  Int?
+  skills           String[]       @default([])
+  locationAddress  String?
+  locationLat      Float?
+  locationLng      Float?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  publishedJobs    Job[]
+  myApplications   Application[]
+  notifications    Notification[]
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  jobs        Job[]
+}
+
+model Job {
+  id              String         @id @default(uuid())
+  title           String
+  description     String
+  locationAddress String
+  locationLat     Float
+  locationLng     Float
+  budgetMin       Int
+  budgetMax       Int
+  deadlineDate    DateTime
+  categoryId      String
+  publisherId     String
+  status          JobStatus      @default(ABIERTO)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  publisher       User           @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+  category        Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  applications    Application[]
+  relatedNotifications Notification[] @relation("JobNotifications")
+}
+
+model Application {
+  id          String            @id @default(uuid())
+  jobId       String
+  applicantId String
+  message     String?
+  status      ApplicationStatus @default(PENDIENTE)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  job         Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant   User              @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, applicantId])
+}
+
+model Notification {
+  id            String           @id @default(uuid())
+  userId        String
+  type          NotificationType
+  title         String
+  message       String
+  relatedJobId  String?
+  read          Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  relatedJob    Job?             @relation("JobNotifications", fields: [relatedJobId], references: [id], onDelete: SetNull)
+}

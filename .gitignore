@@ -1,0 +1,73 @@
+# ==============================
+# Dependencias
+# ==============================
+node_modules/
+.pnp
+.pnp.js
+
+# ==============================
+# Testing
+# ==============================
+coverage/
+
+# ==============================
+# Next.js / Vite / Build
+# ==============================
+.next/
+out/
+dist/
+build/
+.webpack/
+.parcel-cache/
+
+# ==============================
+# Expo / React Native
+# ==============================
+.expo/
+.expo-shared/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Metro / Bundler
+.metro-health-check*
+ios/Pods/
+ios/build/
+android/app/build/
+android/build/
+android/.gradle/
+
+# ==============================
+# Logs
+# ==============================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==============================
+# Env / Secrets
+# ==============================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ==============================
+# Editor / OS
+# ==============================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==============================
+# TypeScript cache
+# ==============================
+*.tsbuildinfo

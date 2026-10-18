@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useThemeStore } from '@/store/themeStore';
+import { useAuthStore } from '@/store/authStore';
 
 type LogoSize = 'sm' | 'md' | 'lg';
 type LogoVariant = 'auto' | 'full' | 'mark';
@@ -7,7 +8,7 @@ type LogoVariant = 'auto' | 'full' | 'mark';
 interface LogoProps {
   /** Altura del logotipo */
   size?: LogoSize;
-  /** Si se renderiza como enlace a la home */
+  /** Si se renderiza como enlace. Destino inteligente: `/feed` con sesión, `/` sin ella. */
   linked?: boolean;
   /**
    * auto -> lockup completo (≥ sm) e isotipo en pantallas pequeñas.
@@ -44,6 +45,7 @@ export default function Logo({
   className = '',
 }: LogoProps) {
   const theme = useThemeStore((s) => s.theme);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const suffix = theme === 'dark' ? '-dark' : '';
 
   const fullSrc = `/brand/logo-horizontal${suffix}.png`;
@@ -86,10 +88,12 @@ export default function Logo({
   );
 
   if (linked) {
+    // Redirección inteligente: al Feed si hay sesión, a la landing si no.
+    const home = isAuthenticated ? '/feed' : '/';
     return (
       <Link
-        to="/"
-        aria-label="HazmeEl2 — Inicio"
+        to={home}
+        aria-label={isAuthenticated ? 'HazmeEl2 — Ir al feed de trabajos' : 'HazmeEl2 — Inicio'}
         className="inline-flex shrink-0 items-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
       >
         {content}

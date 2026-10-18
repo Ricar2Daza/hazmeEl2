@@ -10,8 +10,10 @@ import {
   Menu,
   MessageSquare,
   PlusCircle,
+  Rss,
   Search,
   User,
+  Users,
   X,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -21,8 +23,10 @@ import Logo from '@/components/ui/Logo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const navItems = [
+  { to: '/feed', label: 'Feed', icon: Rss },
   { to: '/dashboard', label: 'Inicio', icon: Briefcase },
   { to: '/trabajos/buscar', label: 'Buscar trabajos', icon: Search },
+  { to: '/usuarios', label: 'Buscar personas', icon: Users },
   { to: '/trabajos/publicar', label: 'Publicar trabajo', icon: PlusCircle },
   { to: '/mis-publicaciones', label: 'Mis publicaciones', icon: ClipboardList },
   { to: '/mis-postulaciones', label: 'Mis postulaciones', icon: ClipboardList },
@@ -32,6 +36,7 @@ const navItems = [
 ];
 
 const mobileItems = [
+  { to: '/feed', label: 'Feed', icon: Rss },
   { to: '/trabajos/buscar', label: 'Buscar', icon: Search },
   { to: '/trabajos/publicar', label: 'Publicar', icon: PlusCircle },
   { to: '/mensajes', label: 'Mensajes', icon: MessageSquare },
@@ -108,7 +113,7 @@ export default function AppLayout() {
               >
                 {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Logo size="sm" className="md:hidden" />
+              <Logo size="sm" />
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -186,9 +191,6 @@ export default function AppLayout() {
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           } fixed left-0 top-14 z-30 h-[calc(100vh-3.5rem)] w-60 overflow-y-auto border-r border-line bg-card transition-transform duration-200 md:sticky md:translate-x-0`}
         >
-          <div className="hidden border-b border-line px-4 py-3 md:block">
-            <Logo size="md" />
-          </div>
           <nav aria-label="Navegación principal" className="space-y-1 p-3">
             {navItems.map((item) => {
               const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
@@ -238,7 +240,7 @@ export default function AppLayout() {
 
       <nav
         aria-label="Navegación móvil"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         {mobileItems.map((item) => {
           const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');

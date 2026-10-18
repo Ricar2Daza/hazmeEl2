@@ -6,6 +6,7 @@ import RegisterPage from '@/pages/auth/RegisterPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import VerifyPage from '@/pages/auth/VerifyPage';
 import DashboardPage from '@/pages/DashboardPage';
+import FeedPage from '@/pages/feed/FeedPage';
 import SearchJobsPage from '@/pages/jobs/SearchJobsPage';
 import JobDetailPage from '@/pages/jobs/JobDetailPage';
 import PublishJobPage from '@/pages/jobs/PublishJobPage';
@@ -13,6 +14,8 @@ import MyPublicationsPage from '@/pages/jobs/MyPublicationsPage';
 import ManageApplicantsPage from '@/pages/jobs/ManageApplicantsPage';
 import MyApplicationsPage from '@/pages/applications/MyApplicationsPage';
 import ProfilePage from '@/pages/profile/ProfilePage';
+import UserSearchPage from '@/pages/users/UserSearchPage';
+import PublicProfilePage from '@/pages/users/PublicProfilePage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import ChatPage from '@/pages/chat/ChatPage';
 
@@ -32,6 +35,7 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/trabajos/buscar" element={<SearchJobsPage />} />
         <Route path="/trabajos/:id" element={<JobDetailPage />} />
         <Route path="/trabajos/publicar" element={<PublishJobPage />} />
@@ -40,6 +44,8 @@ export default function App() {
         <Route path="/mis-publicaciones/:id/postulantes" element={<ManageApplicantsPage />} />
         <Route path="/mis-postulaciones" element={<MyApplicationsPage />} />
         <Route path="/perfil" element={<ProfilePage />} />
+        <Route path="/usuarios" element={<UserSearchPage />} />
+        <Route path="/usuarios/:id" element={<PublicProfilePage />} />
         <Route path="/notificaciones" element={<NotificationsPage />} />
         <Route path="/mensajes" element={<ChatPage />} />
         <Route path="/mensajes/:applicationId" element={<ChatPage />} />

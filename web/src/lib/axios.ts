@@ -85,10 +85,20 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
+const isAuthEndpoint = (url?: string) =>
+  !!url && /\/(auth\/)?(login|register|verify|refresh)\b/.test(url);
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // En endpoints de autenticación un 401 es un error real (credenciales
+    // inválidas), no una sesión expirada: hay que mostrarlo, no refrescar ni
+    // recargar la página (eso ocultaba el mensaje "Email o contraseña incorrectos").
+    if (isAuthEndpoint(originalRequest?.url)) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {

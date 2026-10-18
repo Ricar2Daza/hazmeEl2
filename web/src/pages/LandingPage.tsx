@@ -34,7 +34,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-30 border-b border-line bg-card">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-          <Logo size="sm" linked={false} />
+          <Logo size="sm" />
           <nav aria-label="Cuenta" className="flex min-w-0 items-center gap-1.5 sm:gap-3">
             <ThemeToggle />
             <Link

@@ -125,9 +125,9 @@ export default function ChatPage() {
   };
 
   return (
-    <section className="grid min-h-[calc(100vh-9rem)] grid-cols-12 overflow-hidden rounded-lg border border-line bg-card">
-      <aside className={`${applicationId ? 'hidden lg:block' : ''} col-span-12 border-b border-line lg:col-span-4 lg:border-b-0 lg:border-r`}>
-        <div className="border-b border-line px-5 py-4">
+    <section className="grid min-h-[calc(100dvh-10.75rem)] grid-cols-12 overflow-hidden rounded-lg border border-line bg-card sm:min-h-[calc(100dvh-11.5rem)] md:min-h-[calc(100dvh-7.5rem)]">
+      <aside className={`${applicationId ? 'hidden lg:flex' : 'flex'} col-span-12 min-h-0 flex-col border-b border-line lg:col-span-4 lg:border-b-0 lg:border-r`}>
+        <div className="shrink-0 border-b border-line px-5 py-4">
           <h1 className="flex items-center gap-2 text-lg font-semibold text-ink">
             <MessageSquare className="h-5 w-5 text-accent-500" aria-hidden="true" />
             Mensajes
@@ -140,7 +140,7 @@ export default function ChatPage() {
           <div role="alert" className="p-5 text-sm text-red-700 dark:text-red-400">No se pudieron cargar tus conversaciones.</div>
         ) : conversationsQuery.data?.length ? (
           <>
-            <div className="border-b border-line p-3">
+            <div className="shrink-0 border-b border-line p-3">
               <label className="sr-only" htmlFor="conversation-search">Buscar conversaciones</label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-placeholder" aria-hidden="true" />
@@ -154,7 +154,7 @@ export default function ChatPage() {
                 />
               </div>
             </div>
-            <nav aria-label="Conversaciones" className="max-h-64 overflow-y-auto lg:max-h-[calc(100vh-17rem)]">
+            <nav aria-label="Conversaciones" className="min-h-0 flex-1 overflow-y-auto">
             {filteredConversations.map((item) => {
               const name = item.applicantId === user?.id
                 ? item.job.publisher.fullName
@@ -192,8 +192,8 @@ export default function ChatPage() {
       </aside>
 
       {applicationId && conversation ? (
-        <div className="col-span-12 flex min-h-[30rem] min-w-0 flex-col lg:col-span-8">
-          <header className="border-b border-line px-5 py-4">
+        <div className="col-span-12 flex min-h-0 min-w-0 flex-col lg:col-span-8">
+          <header className="shrink-0 border-b border-line px-5 py-4">
             <Link to="/mensajes" className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-link hover:underline lg:hidden">
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               Todas las conversaciones
@@ -212,7 +212,7 @@ export default function ChatPage() {
               </span>
             </div>
           </header>
-          <div aria-live="polite" className="flex-1 space-y-3 overflow-y-auto bg-bg p-5">
+          <div aria-live="polite" className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-bg p-5">
             {messagesQuery.isLoading ? (
               <p className="text-sm text-muted">Cargando mensajes...</p>
             ) : messagesQuery.isError ? (
@@ -234,7 +234,7 @@ export default function ChatPage() {
             )}
             <div ref={bottomRef} />
           </div>
-          <form onSubmit={handleSubmit} className="flex items-end gap-3 border-t border-line bg-card p-4">
+          <form onSubmit={handleSubmit} className="flex shrink-0 items-end gap-3 border-t border-line bg-card p-4">
             <label className="sr-only" htmlFor="chat-message">Escribe un mensaje</label>
             <textarea
               id="chat-message"
@@ -253,7 +253,7 @@ export default function ChatPage() {
           </form>
         </div>
       ) : applicationId ? (
-        <div className="col-span-12 flex min-h-64 items-center justify-center p-8 text-center text-sm text-ink-soft lg:col-span-8">
+        <div className="col-span-12 flex min-h-0 items-center justify-center p-8 text-center text-sm text-ink-soft lg:col-span-8">
           {conversationsQuery.isLoading ? 'Cargando conversación...' : 'No tienes acceso a esta conversación o ya no existe.'}
         </div>
       ) : (

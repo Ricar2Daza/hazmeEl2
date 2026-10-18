@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Briefcase, Building2, Loader2, MapPin, Search, Users } from 'lucide-react';
 import api from '@/lib/axios';
+import RatingStars from '@/components/ui/RatingStars';
 
 interface PublicUser {
   id: string;
@@ -12,6 +13,7 @@ interface PublicUser {
   experienceYears?: number | null;
   skills?: string[];
   locationAddress?: string | null;
+  rating?: { average: number; count: number };
   _count?: { publishedJobs: number };
 }
 
@@ -114,6 +116,9 @@ export default function UserSearchPage() {
                       <Building2 className="h-3 w-3 shrink-0" aria-hidden="true" />
                       {u.companyName}
                     </p>
+                  )}
+                  {(u.rating?.count ?? 0) > 0 && (
+                    <RatingStars value={u.rating!.average} size="sm" count={u.rating!.count} />
                   )}
                 </div>
               </div>

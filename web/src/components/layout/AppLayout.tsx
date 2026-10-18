@@ -31,6 +31,7 @@ const navItems = [
   { to: '/mis-publicaciones', label: 'Mis publicaciones', icon: ClipboardList },
   { to: '/mis-postulaciones', label: 'Mis postulaciones', icon: ClipboardList },
   { to: '/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { to: '/mensajes/directos', label: 'Mensajes directos', icon: Users },
   { to: '/perfil', label: 'Perfil', icon: User },
   { to: '/notificaciones', label: 'Notificaciones', icon: Bell },
 ];
@@ -40,6 +41,7 @@ const mobileItems = [
   { to: '/trabajos/buscar', label: 'Buscar', icon: Search },
   { to: '/trabajos/publicar', label: 'Publicar', icon: PlusCircle },
   { to: '/mensajes', label: 'Mensajes', icon: MessageSquare },
+  { to: '/mensajes/directos', label: 'Directos', icon: Users },
   { to: '/mis-postulaciones', label: 'Actividad', icon: ClipboardList },
 ];
 
@@ -87,12 +89,21 @@ export default function AppLayout() {
       queryClient.invalidateQueries({ queryKey: ['myApplications'] });
     });
 
+    const off4 = onSocketEvent('direct_message', (data: any) => {
+      if (data?.senderId !== user?.id) {
+        toast.success(`Nuevo mensaje directo de ${data?.sender?.fullName || 'alguien'}`);
+      }
+      queryClient.invalidateQueries({ queryKey: ['directConversations'] });
+      queryClient.invalidateQueries({ queryKey: ['directMessages', data?.conversationId] });
+    });
+
     return () => {
       if (typeof off1 === 'function') off1();
       if (typeof off2 === 'function') off2();
       if (typeof off3 === 'function') off3();
+      if (typeof off4 === 'function') off4();
     };
-  }, [isAuthenticated, accessToken, queryClient]);
+  }, [isAuthenticated, accessToken, queryClient, user?.id]);
 
   const handleLogout = () => {
     logout();
@@ -240,7 +251,7 @@ export default function AppLayout() {
 
       <nav
         aria-label="Navegación móvil"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         {mobileItems.map((item) => {
           const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');

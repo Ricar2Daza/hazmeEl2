@@ -155,4 +155,20 @@ export const chatApi = {
     api.post(`/chat/${applicationId}/messages`, { content }),
 };
 
+/** Mensajería directa entre usuarios (sin postulación de por medio). */
+export const directApi = {
+  conversations: () => api.get('/direct/conversations'),
+  start: (userId: string) => api.post('/direct/conversations', { userId }),
+  messages: (conversationId: string) => api.get(`/direct/conversations/${conversationId}/messages`),
+  send: (conversationId: string, content: string) =>
+    api.post(`/direct/conversations/${conversationId}/messages`, { content }),
+};
+
+/** Valoraciones de usuarios (reputación). */
+export const ratingsApi = {
+  list: (userId: string) => api.get(`/users/${userId}/ratings`),
+  upsert: (userId: string, score: number, comment?: string) =>
+    api.post(`/users/${userId}/ratings`, { score, comment }),
+};
+
 export default api;

@@ -1,5 +1,6 @@
-import { Link, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Award,
@@ -10,10 +11,14 @@ import {
   Loader2,
   MapPin,
   MessageSquare,
+  Star,
+  Users,
   Wallet,
 } from 'lucide-react';
-import api from '@/lib/axios';
+import toast from 'react-hot-toast';
+import api, { directApi, ratingsApi } from '@/lib/axios';
 import { useAuthStore } from '@/store/authStore';
+import RatingStars from '@/components/ui/RatingStars';
 
 interface OpenJob {
   id: string;
@@ -22,6 +27,17 @@ interface OpenJob {
   budgetMin: number;
   budgetMax: number;
   _count?: { applications: number };
+}
+
+interface RatingSummary {
+  average: number;
+  count: number;
+}
+
+interface MyRating {
+  id: string;
+  score: number;
+  comment: string | null;
 }
 
 interface PublicProfile {
@@ -35,14 +51,29 @@ interface PublicProfile {
   portfolioUrl?: string | null;
   createdAt: string;
   _count?: { publishedJobs: number; myApplications: number };
+  rating: RatingSummary;
+  myRating: MyRating | null;
   openJobs: OpenJob[];
+}
+
+interface RatingEntry {
+  id: string;
+  score: number;
+  comment: string | null;
+  createdAt: string;
+  rater: { id: string; fullName: string; companyName?: string | null };
 }
 
 const memberSince = (date: string) =>
   new Date(date).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
 
+const shortDate = (date: string) =>
+  new Date(date).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
+
 export default function PublicProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
 
   const { data, isLoading, isError } = useQuery({
@@ -54,6 +85,61 @@ export default function PublicProfilePage() {
     enabled: !!id,
     retry: false,
   });
+
+  const ratingsQuery = useQuery({
+    queryKey: ['users', 'ratings', id],
+    queryFn: async () => {
+      const res = await ratingsApi.list(id!);
+      return res.data;
+    },
+    enabled: !!id,
+  });
+
+  const isSelf = currentUserId === data?.id;
+
+  // Estado local del formulario de valoración.
+  const [score, setScore] = useState(0);
+  const [comment, setComment] = useState('');
+
+  useEffect(() => {
+    if (data?.myRating) {
+      setScore(data.myRating.score);
+      setComment(data.myRating.comment || '');
+    }
+  }, [data?.myRating?.id]);
+
+  const rateMutation = useMutation({
+    mutationFn: (payload: { score: number; comment: string }) =>
+      ratingsApi.upsert(id!, payload.score, payload.comment),
+    onSuccess: () => {
+      toast.success('Valoración guardada');
+      queryClient.invalidateQueries({ queryKey: ['users', 'profile', id] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'ratings', id] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'No se pudo guardar la valoración');
+    },
+  });
+
+  const startChatMutation = useMutation({
+    mutationFn: () => directApi.start(id!),
+    onSuccess: (res) => {
+      const conversationId = res.data?.data?.id;
+      if (conversationId) navigate(`/mensajes/directos/${conversationId}`);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'No se pudo iniciar la conversación');
+    },
+  });
+
+  const handleRate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (score < 1 || score > 5) {
+      toast.error('Selecciona una puntuación de 1 a 5 estrellas');
+      return;
+    }
+    rateMutation.mutate({ score, comment });
+  };
 
   if (isLoading) {
     return (
@@ -78,8 +164,8 @@ export default function PublicProfilePage() {
     );
   }
 
-  const isSelf = currentUserId === data.id;
   const firstJob = data.openJobs?.[0];
+  const reviews: RatingEntry[] = ratingsQuery.data?.data || [];
 
   return (
     <div className="space-y-6">
@@ -97,8 +183,17 @@ export default function PublicProfilePage() {
 
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold text-ink">{data.fullName}</h1>
+
+            {/* Valoración media */}
+            <div className="mt-1 flex items-center gap-2">
+              <RatingStars value={data.rating?.average || 0} size="sm" count={data.rating?.count || 0} />
+              {data.rating?.count === 0 && (
+                <span className="text-xs text-muted">Sin valoraciones todavía</span>
+              )}
+            </div>
+
             {data.companyName && (
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-soft">
+              <p className="mt-2 flex items-center gap-1.5 text-sm text-ink-soft">
                 <Building2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                 {data.companyName}
               </p>
@@ -143,20 +238,34 @@ export default function PublicProfilePage() {
                 <strong className="text-ink">{data._count?.myApplications ?? 0}</strong> postulacion
                 {(data._count?.myApplications ?? 0) !== 1 ? 'es' : ''}
               </span>
+              <span className="text-ink-soft">
+                <Users className="mr-1 inline h-3.5 w-3.5 align-[-2px]" aria-hidden="true" />
+                <strong className="text-ink">{data.rating?.count ?? 0}</strong> valoracion
+                {(data.rating?.count ?? 0) !== 1 ? 'es' : ''}
+              </span>
             </div>
           </div>
 
+          {/* Acciones */}
           {!isSelf && (
-            <div className="shrink-0">
-              {firstJob ? (
-                <Link to={`/trabajos/${firstJob.id}`} className="btn-primary w-full sm:w-auto">
+            <div className="flex shrink-0 flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => startChatMutation.mutate()}
+                disabled={startChatMutation.isPending}
+                className="btn-primary w-full sm:w-auto"
+              >
+                {startChatMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
                   <MessageSquare className="h-4 w-4" aria-hidden="true" />
-                  Contactar
+                )}
+                Enviar mensaje
+              </button>
+              {firstJob && (
+                <Link to={`/trabajos/${firstJob.id}`} className="btn-secondary w-full sm:w-auto">
+                  Ver sus trabajos
                 </Link>
-              ) : (
-                <button type="button" className="btn-secondary w-full sm:w-auto" disabled>
-                  Sin contacto disponible
-                </button>
               )}
             </div>
           )}
@@ -177,6 +286,58 @@ export default function PublicProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Valorar a este usuario */}
+      {!isSelf && (
+        <div className="card">
+          <h2 className="mb-1 flex items-center gap-2 text-lg font-semibold text-ink">
+            <Star className="h-5 w-5 text-accent-500" aria-hidden="true" />
+            {data.myRating ? 'Tu valoración' : 'Valorar a esta persona'}
+          </h2>
+          <p className="mb-4 text-sm text-muted">
+            Puedes valorar una sola vez. Al enviarla se actualiza tu puntuación anterior.
+          </p>
+
+          <form onSubmit={handleRate} className="space-y-4">
+            <div>
+              <span className="label mb-1 block">Puntuación</span>
+              <RatingStars value={score} onChange={setScore} size="md" />
+            </div>
+
+            <div>
+              <label htmlFor="rating-comment" className="label block">
+                Comentario (opcional)
+              </label>
+              <textarea
+                id="rating-comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                placeholder="Cuéntanos cómo fue tu experiencia..."
+                className="input resize-y"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={score < 1 || rateMutation.isPending}
+              className="btn-primary"
+            >
+              {rateMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Guardando...
+                </>
+              ) : data.myRating ? (
+                'Actualizar valoración'
+              ) : (
+                'Enviar valoración'
+              )}
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Trabajos abiertos */}
       <div>
@@ -209,6 +370,56 @@ export default function PublicProfilePage() {
               </Link>
             ))}
           </div>
+        )}
+      </div>
+
+      {/* Reseñas / valoraciones recibidas */}
+      <div>
+        <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-ink">
+          <Star className="h-5 w-5 text-muted" aria-hidden="true" />
+          Valoraciones ({data.rating?.count ?? 0})
+        </h2>
+
+        {ratingsQuery.isLoading ? (
+          <p className="text-sm text-muted">Cargando valoraciones...</p>
+        ) : reviews.length === 0 ? (
+          <div className="rounded-lg border border-line bg-card px-6 py-8 text-center text-sm text-ink-soft">
+            Esta persona todavía no tiene valoraciones.
+          </div>
+        ) : (
+          <ul className="space-y-3">
+            {reviews.map((review) => (
+              <li key={review.id} className="card">
+                <div className="flex items-center justify-between gap-3">
+                  <Link
+                    to={`/usuarios/${review.rater.id}`}
+                    className="flex min-w-0 items-center gap-3 hover:text-link"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-primary-500 text-sm font-semibold text-white">
+                      {review.rater.fullName.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-ink">
+                        {review.rater.fullName}
+                      </span>
+                      {review.rater.companyName && (
+                        <span className="block truncate text-xs text-muted">{review.rater.companyName}</span>
+                      )}
+                    </span>
+                  </Link>
+                  <div className="shrink-0 text-right">
+                    <RatingStars value={review.score} size="sm" />
+                    <time className="mt-1 block text-[11px] text-muted">{shortDate(review.createdAt)}</time>
+                  </div>
+                </div>
+                {review.comment && (
+                  <p className="mt-3 border-t border-line pt-3 text-sm leading-6 text-ink-soft">
+                    {review.comment}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>

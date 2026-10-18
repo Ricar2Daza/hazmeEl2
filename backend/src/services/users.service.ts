@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../utils/prisma';
 import { AppError } from '../utils/AppError';
+import { getSummaryForUsers, getMyRatingOf } from './ratings.service';
 
 /**
  * Campos públicos de un usuario. Nunca exponemos email, teléfono ni hash
@@ -80,8 +81,13 @@ export const searchUsers = async (query: SearchUsersQuery, currentUserId?: strin
     prisma.user.count({ where }),
   ]);
 
+  const ratingMap = await getSummaryForUsers(users.map((u) => u.id));
+
   return {
-    data: users,
+    data: users.map((user) => ({
+      ...user,
+      rating: ratingMap.get(user.id) ?? { average: 0, count: 0 },
+    })),
     page,
     limit,
     total,
@@ -89,7 +95,7 @@ export const searchUsers = async (query: SearchUsersQuery, currentUserId?: strin
   };
 };
 
-export const getPublicProfile = async (userId: string) => {
+export const getPublicProfile = async (userId: string, viewerId?: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -113,5 +119,15 @@ export const getPublicProfile = async (userId: string) => {
     },
   });
 
-  return { ...user, openJobs };
+  const [ratingMap, myRating] = await Promise.all([
+    getSummaryForUsers([userId]),
+    viewerId && viewerId !== userId ? getMyRatingOf(viewerId, userId) : Promise.resolve(null),
+  ]);
+
+  return {
+    ...user,
+    rating: ratingMap.get(userId) ?? { average: 0, count: 0 },
+    myRating,
+    openJobs,
+  };
 };

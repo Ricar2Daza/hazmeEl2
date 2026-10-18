@@ -18,6 +18,7 @@ import UserSearchPage from '@/pages/users/UserSearchPage';
 import PublicProfilePage from '@/pages/users/PublicProfilePage';
 import NotificationsPage from '@/pages/notifications/NotificationsPage';
 import ChatPage from '@/pages/chat/ChatPage';
+import DirectMessagesPage from '@/pages/messages/DirectMessagesPage';
 
 export default function App() {
   return (
@@ -48,6 +49,9 @@ export default function App() {
         <Route path="/usuarios/:id" element={<PublicProfilePage />} />
         <Route path="/notificaciones" element={<NotificationsPage />} />
         <Route path="/mensajes" element={<ChatPage />} />
+        {/* Rutas directas antes de /mensajes/:applicationId (orden de mayor especificidad) */}
+        <Route path="/mensajes/directos" element={<DirectMessagesPage />} />
+        <Route path="/mensajes/directos/:conversationId" element={<DirectMessagesPage />} />
         <Route path="/mensajes/:applicationId" element={<ChatPage />} />
       </Route>
 

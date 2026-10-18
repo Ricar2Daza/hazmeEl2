@@ -38,7 +38,7 @@ const getById = [
   validate(userIdParamsSchema),
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const user = await usersService.getPublicProfile(req.params.id);
+      const user = await usersService.getPublicProfile(req.params.id, req.user?.id);
       res.status(200).json({
         status: 'success',
         data: user,

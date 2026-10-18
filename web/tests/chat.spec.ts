@@ -19,7 +19,8 @@ const loginThroughWeb = async (page: Page, email: string) => {
   await page.getByPlaceholder('tu@email.com').fill(email);
   await page.getByPlaceholder('Ingresa tu contraseña').fill('Test1234!');
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+  // Señal estable de sesión: el logo del navbar ya apunta al feed.
+  await expect(page.getByRole('link', { name: 'HazmeEl2 — Ir al feed de trabajos' })).toBeVisible();
 };
 
 test('postulante y publicante intercambian mensajes en tiempo real', async ({ browser, request }) => {

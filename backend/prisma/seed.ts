@@ -301,12 +301,63 @@ async function main() {
 
   console.log('✅ Notificaciones creadas');
 
+  // Valoraciones de ejemplo (una por par rater→rated; ya no se autovalora).
+  const ratingsData = [
+    { raterId: u2.id, ratedId: u1.id, score: 5, comment: 'Muy profesional y con entregas puntuales. Recomendable.' },
+    { raterId: u3.id, ratedId: u1.id, score: 4, comment: 'Buena comunicación durante todo el proyecto.' },
+    { raterId: u1.id, ratedId: u2.id, score: 5, comment: 'Excelente trabajo, código limpio y a tiempo.' },
+    { raterId: u4.id, ratedId: u2.id, score: 4, comment: null },
+  ];
+
+  for (const { raterId, ratedId, score, comment } of ratingsData) {
+    await prisma.rating.upsert({
+      where: { raterId_ratedId: { raterId, ratedId } },
+      update: {},
+      create: { raterId, ratedId, score, comment },
+    });
+  }
+
+  console.log('✅ Valoraciones creadas');
+
+  // Conversación directa de ejemplo (Ana ↔ María), normalizada A < B.
+  const [convUserAId, convUserBId] = u1.id < u3.id ? [u1.id, u3.id] : [u3.id, u1.id];
+  const seedConversation = await prisma.conversation.upsert({
+    where: { userAId_userBId: { userAId: convUserAId, userBId: convUserBId } },
+    update: {},
+    create: { userAId: convUserAId, userBId: convUserBId },
+  });
+
+  const hasDirectMessage = await prisma.directMessage.findFirst({
+    where: { conversationId: seedConversation.id },
+  });
+
+  if (!hasDirectMessage) {
+    await prisma.directMessage.createMany({
+      data: [
+        {
+          conversationId: seedConversation.id,
+          senderId: u1.id,
+          content: '¡Hola! Vi tu perfil y me interesaría colaborar en un proyecto de interiorismo.',
+        },
+        {
+          conversationId: seedConversation.id,
+          senderId: u3.id,
+          content: '¡Hola Ana! Claro, cuéntame los detalles del proyecto.',
+        },
+      ],
+    });
+  }
+
+  console.log('✅ Conversación directa creada');
+
   console.log('\n🌱 Seed completado con éxito!');
   console.log(`   - ${users.length} usuarios`);
   console.log(`   - ${categories.length} categorías`);
   console.log(`   - ${jobs.length} trabajos`);
   console.log(`   - ${applications.length} postulaciones`);
   console.log(`   - ${notifications.length} notificaciones`);
+  console.log(`   - ${ratingsData.length} valoraciones`);
+  console.log('   - 1 conversación directa (2 mensajes)');
   console.log('\n🔐 Cuentas de prueba (todas con contraseña: Test1234!):');
   users.forEach((u) => console.log(`   - ${u.email}`));
 }

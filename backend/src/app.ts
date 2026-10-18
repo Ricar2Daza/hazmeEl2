@@ -13,6 +13,7 @@ import applicationsRouter from './routes/applications.router';
 import notificationsRouter from './routes/notifications.router';
 import chatRouter from './routes/chat.router';
 import usersRouter from './routes/users.router';
+import directRouter from './routes/direct.router';
 import { swaggerSpec } from './utils/swagger';
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/applications', applicationsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/direct', directRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

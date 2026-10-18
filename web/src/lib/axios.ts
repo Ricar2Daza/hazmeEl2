@@ -1,5 +1,18 @@
 import axios from 'axios';
 
+/** Dispara el evento con el que la store se sincroniza tras una renovación. */
+const notifyTokensRefreshed = (accessToken: string, refreshToken: string) => {
+  try {
+    window.dispatchEvent(
+      new CustomEvent('auth:tokens-refreshed', {
+        detail: { accessToken, refreshToken },
+      })
+    );
+  } catch {
+    // ignore (no hay window, p. ej. en entornos de test)
+  }
+};
+
 const getAccessToken = (): string | null => {
   try {
     const stored = localStorage.getItem('auth-store');
@@ -11,7 +24,7 @@ const getAccessToken = (): string | null => {
   }
 };
 
-const getRefreshToken = (): string | null => {
+export const getRefreshToken = (): string | null => {
   try {
     const stored = localStorage.getItem('auth-store');
     if (!stored) return null;
@@ -22,7 +35,7 @@ const getRefreshToken = (): string | null => {
   }
 };
 
-const setTokens = (accessToken: string, refreshToken: string) => {
+export const setTokens = (accessToken: string, refreshToken: string) => {
   try {
     const stored = localStorage.getItem('auth-store');
     if (stored) {
@@ -36,9 +49,49 @@ const setTokens = (accessToken: string, refreshToken: string) => {
       }
       localStorage.setItem('auth-store', JSON.stringify(parsed));
     }
+    // Avisamos a la store (zustand) para que su estado en memoria no se quede
+    // con un access token caducado: si no, el socket se reconectaría con un
+    // token viejo y el tiempo real moriría hasta volver a entrar.
+    notifyTokensRefreshed(accessToken, refreshToken);
   } catch {
     // ignore
   }
+};
+
+// ngrok interrumpe con una página de aviso a los clientes que no parecen
+// navegadores y puede devolver HTML (200) en lugar de JSON, lo que rompe el
+// parseo. Si servimos desde un túnel, lo indicamos para saltarnos el aviso.
+const isTunnelOrigin =
+  typeof window !== 'undefined' &&
+  /(^|\.)ngrok(-free)?\.(dev|app)$/.test(window.location.hostname);
+
+/**
+ * Pide un par nuevo de tokens al backend.
+ *
+ * - Devuelve `null` cuando no hay con qué renovar la sesión (sin refresh token
+ *   o respuesta sin tokens).
+ * - Propaga el error HTTP si el backend responde 4xx/5xx, para que quien llame
+ *   pueda distinguir "la sesión caducó" de "no hay red ahora mismo".
+ */
+export const fetchNewTokens = async (): Promise<{
+  accessToken: string;
+  refreshToken: string;
+} | null> => {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  // axios "crudo" (sin interceptores) para no entrar en bucles de renovación.
+  const response = await axios.post(
+    '/api/auth/refresh',
+    { refreshToken },
+    isTunnelOrigin ? { headers: { 'ngrok-skip-browser-warning': 'true' } } : undefined
+  );
+  const accessToken = response.data?.accessToken;
+  if (!accessToken) return null;
+
+  const newRefresh = response.data?.refreshToken || refreshToken;
+  setTokens(accessToken, newRefresh);
+  return { accessToken, refreshToken: newRefresh };
 };
 
 const clearAuth = () => {
@@ -65,6 +118,9 @@ api.interceptors.request.use(
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (isTunnelOrigin) {
+      config.headers['ngrok-skip-browser-warning'] = 'true';
     }
     return config;
   },
@@ -127,20 +183,34 @@ api.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post(
-          '/api/auth/refresh',
-          { refreshToken }
-        );
-
-        const { accessToken: newAccess, refreshToken: newRefresh } = response.data;
-        setTokens(newAccess, newRefresh ?? refreshToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-        processQueue(null, newAccess);
+        // fetchNewTokens propaga el error HTTP: así sabemos si la sesión
+        // realmente caducó o si el backend simplemente no está respondiendo.
+        const refreshed = await fetchNewTokens();
+        if (!refreshed) {
+          throw Object.assign(new Error('No se pudo renovar la sesión'), {
+            response: { status: 401 },
+          });
+        }
+        originalRequest.headers.Authorization = `Bearer ${refreshed.accessToken}`;
+        processQueue(null, refreshed.accessToken);
         return api(originalRequest);
-      } catch (refreshError) {
-        clearAuth();
+      } catch (refreshError: any) {
         processQueue(refreshError, null);
-        window.location.href = '/login';
+
+        const status = refreshError?.response?.status;
+
+        // 401/403 del endpoint de refresh => el refresh token ya no sirve y hay
+        // que salir. Cualquier otro fallo (túnel cayéndose, backend
+        // reiniciándose, sin red) es transitorio: mantenemos la sesión guardada
+        // para que el usuario no sea expulsado por un corte momentáneo.
+        if (status === 401 || status === 403) {
+          clearAuth();
+          window.location.href = '/login';
+        } else {
+          console.warn(
+            '[Auth] No se pudo renovar la sesión (fallo transitorio); se reintentará en la próxima petición.'
+          );
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

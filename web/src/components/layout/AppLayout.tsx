@@ -67,9 +67,10 @@ export default function AppLayout() {
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;
 
-    const socket = getSocket();
-    if (!socket) return;
-
+    // No comprobamos aquí si el socket existe: onSocketEvent registra en un
+    // registro que se engancha al socket en cuanto se cree (los efectos de los
+    // hijos corren antes que los de AppLayout, así que en una recarga el socket
+    // aún no existe cuando la página de mensajes pide sus eventos).
     const off1 = onSocketEvent('new_application', (data: any) => {
       toast.success(`Nueva postulación en tu trabajo: ${data?.jobTitle || data?.title || ''}`);
       increment();

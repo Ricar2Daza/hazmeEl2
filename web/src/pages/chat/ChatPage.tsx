@@ -43,6 +43,8 @@ export default function ChatPage() {
       const response = await chatApi.conversations();
       return response.data.data || [];
     },
+    // Red de seguridad si el socket no está disponible.
+    refetchInterval: 15000,
   });
   const conversation = conversationsQuery.data?.find((item) => item.id === applicationId);
 
@@ -53,6 +55,7 @@ export default function ChatPage() {
       return response.data.data || [];
     },
     enabled: !!applicationId,
+    refetchInterval: 5000,
   });
 
   useEffect(() => {
@@ -65,15 +68,14 @@ export default function ChatPage() {
   }, [applicationId, queryClient]);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-    const handleConnect = () => setSocketConnected(true);
-    const handleDisconnect = () => setSocketConnected(false);
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
+    // onSocketEvent engancha el listener aunque el socket todavía no exista
+    // (en una recarga completa se crea después de montar los componentes).
+    setSocketConnected(getSocket()?.connected ?? false);
+    const offConnect = onSocketEvent('connect', () => setSocketConnected(true));
+    const offDisconnect = onSocketEvent('disconnect', () => setSocketConnected(false));
     return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
+      offConnect();
+      offDisconnect();
     };
   }, []);
 

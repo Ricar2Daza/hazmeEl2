@@ -13,10 +13,18 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
+    // Validación en tiempo real: el error de contraseñas aparece mientras se escribe.
+    mode: 'onChange',
   });
+
+  // Coincidencia calculada aparte para poder inhabilitar el botón al instante.
+  const password = watch('password') ?? '';
+  const confirmPassword = watch('confirmPassword') ?? '';
+  const passwordsMatch = password.length > 0 && password === confirmPassword;
 
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
@@ -80,12 +88,45 @@ export default function RegisterPage() {
             <label className="label">Contraseña</label>
             <input
               type="password"
+              autoComplete="new-password"
               {...register('password')}
               className="input"
               placeholder="Mínimo 8 caracteres"
             />
             {errors.password && (
               <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.password.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="label">Confirmar contraseña</label>
+            <input
+              type="password"
+              autoComplete="new-password"
+              {...register('confirmPassword')}
+              className="input"
+              placeholder="Repite la contraseña"
+              aria-invalid={confirmPassword.length > 0 && !passwordsMatch}
+            />
+            {errors.confirmPassword ? (
+              <p
+                role="alert"
+                className="text-red-600 dark:text-red-400 text-sm mt-1"
+              >
+                {errors.confirmPassword.message}
+              </p>
+            ) : (
+              confirmPassword.length > 0 &&
+              passwordsMatch && (
+                <p className="text-green-600 dark:text-green-400 text-sm mt-1">
+                  Las contraseñas coinciden
+                </p>
+              )
+            )}
+            {confirmPassword.length > 0 && !passwordsMatch && !errors.confirmPassword && (
+              <p role="alert" className="text-red-600 dark:text-red-400 text-sm mt-1">
+                Las contraseñas no coinciden
+              </p>
             )}
           </div>
 
@@ -101,7 +142,7 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !passwordsMatch}
             className="btn-primary w-full"
           >
             {isSubmitting ? 'Registrando...' : 'Crear cuenta'}

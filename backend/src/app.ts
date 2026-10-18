@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 
 import { errorHandler, notFoundHandler } from './middlewares';
+import { isAllowedOrigin } from './utils/corsOrigin';
 import authRouter from './routes/auth.router';
 import categoriesRouter from './routes/categories.router';
 import jobsRouter from './routes/jobs.router';
@@ -22,13 +23,11 @@ app.set('trust proxy', 1);
 
 app.use(helmet());
 
-const corsOrigin = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:5173', 'http://localhost:8081'];
-
+// Orígenes permitidos: la lista de CORS_ORIGIN más localhost y los túneles de
+// ngrok en desarrollo (su subdominio cambia en cada sesión del plan gratuito).
 app.use(
   cors({
-    origin: corsOrigin,
+    origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
     credentials: true,
   })
 );

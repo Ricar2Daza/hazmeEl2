@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import { verifyToken } from './jwt';
 import { AppError } from './AppError';
 import { TokenPayload } from './jwt';
+import { isAllowedOrigin } from './corsOrigin';
 
 let io: Server;
 
@@ -11,13 +12,10 @@ export interface AuthSocket extends Socket {
 }
 
 export const initSocket = (httpServer: HttpServer): Server => {
-  const corsOrigin = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:5173', 'http://localhost:8081'];
-
   io = new Server(httpServer, {
     cors: {
-      origin: corsOrigin,
+      // Mismo criterio que Express: lista configurada + localhost + túneles.
+      origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
       credentials: true,
     },
   });

@@ -1,11 +1,17 @@
 import { z } from 'zod';
 
-export const registerSchema = z.object({
-  fullName: z.string().min(2, 'Nombre completo debe tener al menos 2 caracteres'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
-  phone: z.string().optional(),
-});
+export const registerSchema = z
+  .object({
+    fullName: z.string().min(2, 'Nombre completo debe tener al menos 2 caracteres'),
+    email: z.string().email('Email inválido'),
+    password: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
+    confirmPassword: z.string().min(8, 'Confirma tu contraseña (mínimo 8 caracteres)'),
+    phone: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmPassword'],
+  });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 

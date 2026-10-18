@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Search, Send, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { directApi } from '@/lib/axios';
-import { getSocket, onSocketEvent } from '@/lib/socket';
+import { onSocketEvent } from '@/lib/socket';
 import { useAuthStore } from '@/store/authStore';
 
 interface DirectMessage {
@@ -37,6 +37,9 @@ export default function DirectMessagesPage() {
       const response = await directApi.conversations();
       return response.data.data || [];
     },
+    // Red de seguridad: si el socket se cae (túnel inestable, token caducado…)
+    // la bandeja sigue refrescándose sola cada pocos segundos.
+    refetchInterval: 10000,
   });
 
   const conversation = conversationsQuery.data?.find((item) => item.id === conversationId);
@@ -48,6 +51,7 @@ export default function DirectMessagesPage() {
       return response.data.data || [];
     },
     enabled: !!conversationId,
+    refetchInterval: 5000,
   });
 
   useEffect(() => {
@@ -148,7 +152,7 @@ export default function DirectMessagesPage() {
               {filteredConversations.map((item) => (
                 <Link
                   key={item.id}
-                  to={`/mensajes-directos/${item.id}`}
+                  to={`/mensajes/directos/${item.id}`}
                   aria-current={item.id === conversationId ? 'page' : undefined}
                   className={`block border-b border-line px-5 py-4 hover:bg-subtle ${
                     item.id === conversationId ? 'border-l-2 border-l-accent-500 bg-subtle' : ''
@@ -192,7 +196,7 @@ export default function DirectMessagesPage() {
         <div className="col-span-12 flex min-h-0 min-w-0 flex-col lg:col-span-8">
           <header className="shrink-0 border-b border-line px-5 py-4">
             <Link
-              to="/mensajes-directos"
+              to="/mensajes/directos"
               className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-link hover:underline lg:hidden"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />

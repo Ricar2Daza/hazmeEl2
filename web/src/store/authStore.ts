@@ -46,7 +46,10 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       register: async (data: RegisterInput) => {
-        const res = await api.post('/auth/register', data);
+        // El backend sólo pide nombre, email, contraseña y teléfono: la
+        // confirmación es validación de la interfaz, no datos a enviar.
+        const { confirmPassword: _confirmPassword, ...payload } = data;
+        const res = await api.post('/auth/register', payload);
         if (res.data.accessToken) {
           set({
             user: res.data.user || res.data.data || null,
@@ -87,13 +90,23 @@ export const useAuthStore = create<AuthState>()(
             user: res.data.data || res.data.user || null,
             isAuthenticated: true,
           });
-        } catch {
-          set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-          });
+        } catch (error: any) {
+          const status = error?.response?.status;
+          // 401/403: el backend rechazó la sesión (el interceptor ya intentó
+          // refrescarla). Otros errores son de red/servidor: no cerramos la
+          // sesión por un corte puntual del túnel o del backend.
+          if (status === 401 || status === 403) {
+            set({
+              user: null,
+              accessToken: null,
+              refreshToken: null,
+              isAuthenticated: false,
+            });
+          } else {
+            console.warn(
+              '[Auth] No se pudo verificar la sesión (fallo transitorio); se mantiene la sesión local.'
+            );
+          }
         }
       },
 
@@ -122,13 +135,16 @@ export const useAuthStore = create<AuthState>()(
           if (res.data.accessToken) {
             connectSocket(res.data.accessToken);
           }
-        } catch {
-          set({
-            user: null,
-            accessToken: null,
-            refreshToken: null,
-            isAuthenticated: false,
-          });
+        } catch (error: any) {
+          const status = error?.response?.status;
+          if (status === 401 || status === 403) {
+            set({
+              user: null,
+              accessToken: null,
+              refreshToken: null,
+              isAuthenticated: false,
+            });
+          }
         }
       },
 
@@ -150,3 +166,26 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// El interceptor de axios renueva los tokens por su cuenta (y el socket lo hace
+// cuando rechazan su token), pero el estado en memoria de esta store se quedaría
+// con el access token caducado: al reconectar, el backend lo rechazaría otra vez
+// y el tiempo real moriría hasta volver a entrar. Sincronizamos aquí.
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth:tokens-refreshed', (event) => {
+    const detail = (event as CustomEvent).detail as
+      | { accessToken?: string; refreshToken?: string }
+      | undefined;
+    const accessToken = detail?.accessToken;
+    if (!accessToken) return;
+
+    const current = useAuthStore.getState();
+    if (!current.isAuthenticated) return;
+
+    useAuthStore.setState({
+      accessToken,
+      refreshToken: detail?.refreshToken || current.refreshToken,
+    });
+    connectSocket(accessToken);
+  });
+}

@@ -24,9 +24,16 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: RegisterInput) => {
     try {
-      await registerStore(data);
-      toast.success('Registro exitoso. Verifica tu email.');
-      navigate('/dashboard');
+      const res = await registerStore(data);
+      // Si la verificación por email está desactivada (MVP con SMTP mockeado),
+      // la cuenta ya queda activa y se puede entrar directo.
+      if (res?.verificationRequired === false) {
+        toast.success('Registro exitoso. Ya puedes iniciar sesión.');
+        navigate('/login');
+      } else {
+        toast.success('Registro exitoso. Verifica tu email.');
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Error al registrarse';
       toast.error(msg);

@@ -32,12 +32,22 @@ const sanitizeUser = (user: any) => {
   return rest;
 };
 
+/**
+ * La verificación por email sólo tiene sentido con un SMTP real. En este MVP el
+ * correo está mockeado (sólo se imprime en la consola del backend), así que con
+ * EMAIL_VERIFICATION_REQUIRED=false las cuentas nacen activas y se puede entrar
+ * directamente. Con la variable en true (o sin definir) se comporta como antes.
+ */
+const isEmailVerificationRequired = () =>
+  (process.env.EMAIL_VERIFICATION_REQUIRED ?? 'true').toLowerCase() !== 'false';
+
 export const register = async (input: RegisterInput) => {
   const existing = await prisma.user.findUnique({ where: { email: input.email.toLowerCase() } });
   if (existing) {
     throw new AppError('Ya existe un usuario con este email', 409);
   }
 
+  const verificationRequired = isEmailVerificationRequired();
   const passwordHash = await hashPassword(input.password);
   const verificationToken = crypto.randomBytes(32).toString('hex');
 
@@ -47,15 +57,17 @@ export const register = async (input: RegisterInput) => {
       passwordHash,
       fullName: input.fullName,
       phone: input.phone,
-      verificationToken,
-      emailVerified: false,
+      verificationToken: verificationRequired ? verificationToken : null,
+      emailVerified: !verificationRequired,
     },
   });
 
-  const verifyLink = `/api/auth/verify/${verificationToken}`;
-  console.log(`\n📧 [EMAIL MOCK] Enviado a ${user.email}: Verifica tu email en ${verifyLink}\n`);
+  if (verificationRequired) {
+    const verifyLink = `/api/auth/verify/${verificationToken}`;
+    console.log(`\n📧 [EMAIL MOCK] Enviado a ${user.email}: Verifica tu email en ${verifyLink}\n`);
+  }
 
-  return { user: sanitizeUser(user) };
+  return { user: sanitizeUser(user), verificationRequired };
 };
 
 export const login = async (input: LoginInput) => {
@@ -65,7 +77,7 @@ export const login = async (input: LoginInput) => {
     throw new AppError('Email o contraseña incorrectos', 401);
   }
 
-  if (!user.emailVerified) {
+  if (isEmailVerificationRequired() && !user.emailVerified) {
     throw new AppError('Debes verificar tu email antes de iniciar sesión', 403);
   }
 

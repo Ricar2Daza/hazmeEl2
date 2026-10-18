@@ -9,7 +9,8 @@ export const connectSocket = (accessToken: string): Socket => {
     return socket;
   }
 
-  socket = io('http://localhost:3000', {
+  // Conecta al mismo origen que sirvió la página (Vite proxea /socket.io).
+  socket = io(window.location.origin, {
     auth: {
       token: `Bearer ${accessToken}`,
     },

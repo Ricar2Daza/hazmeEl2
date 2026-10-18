@@ -11,6 +11,10 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Vite bloquea las peticiones cuyo Host no reconoce (p. ej. el dominio
+    // aleatorio de un túnel ngrok). Lo desactivamos para que el MVP sea
+    // compartible sin reescribir la config cada vez que cambia el subdominio.
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

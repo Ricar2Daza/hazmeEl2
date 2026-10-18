@@ -50,7 +50,10 @@ const clearAuth = () => {
 };
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  // Ruta relativa: se resuelve contra el origen actual (localhost:5173 o el
+  // dominio del túnel) y Vite la proxea al backend. Así el MVP es compartible
+  // sin depender de localhost.
+  baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -125,7 +128,7 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          'http://localhost:3000/api/auth/refresh',
+          '/api/auth/refresh',
           { refreshToken }
         );
 

@@ -52,7 +52,9 @@ const register = [
       const result = await authService.register(req.body);
       res.status(201).json({
         status: 'success',
-        message: 'Usuario registrado exitosamente. Verifica tu email.',
+        message: result.verificationRequired
+          ? 'Usuario registrado exitosamente. Verifica tu email.'
+          : 'Usuario registrado exitosamente. Ya puedes iniciar sesión.',
         ...result,
       });
     } catch (err) {

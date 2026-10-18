@@ -29,7 +29,7 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
-  register: (data: RegisterInput) => Promise<void>;
+  register: (data: RegisterInput) => Promise<any>;
   login: (data: LoginInput) => Promise<void>;
   verify: () => Promise<void>;
   logout: () => void;
@@ -58,6 +58,8 @@ export const useAuthStore = create<AuthState>()(
             connectSocket(res.data.accessToken);
           }
         }
+        // Devolvemos la respuesta para que la UI sepa si pide verificación.
+        return res.data;
       },
 
       login: async (data: LoginInput) => {

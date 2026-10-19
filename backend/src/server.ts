@@ -2,6 +2,7 @@ import 'dotenv/config';
 import app from './app';
 import { createServer } from 'http';
 import { initSocket } from './utils/socket';
+import { initMqtt, closeMqtt } from './mqtt/broker';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -16,6 +17,7 @@ const startServer = async (): Promise<void> => {
     const httpServer = createServer(app);
     initSocket(httpServer);
     console.log('✅ Socket.io inicializado');
+    await initMqtt(httpServer);
 
     httpServer.listen(PORT, () => {
       console.log(`\n🚀 HazMe API iniciado en puerto ${PORT}`);
@@ -32,12 +34,14 @@ const startServer = async (): Promise<void> => {
 
 process.on('SIGINT', async () => {
   console.log('\n🛑 Apagando servidor...');
+  await closeMqtt();
   await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Apagando servidor...');
+  await closeMqtt();
   await prisma.$disconnect();
   process.exit(0);
 });

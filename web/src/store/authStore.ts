@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '@/lib/axios';
 import { connectSocket, disconnectSocket } from '@/lib/socket';
+import { connectMqtt, disconnectMqtt } from '@/lib/mqtt';
 import {
   RegisterInput,
   LoginInput,
@@ -51,15 +52,15 @@ export const useAuthStore = create<AuthState>()(
         const { confirmPassword: _confirmPassword, ...payload } = data;
         const res = await api.post('/auth/register', payload);
         if (res.data.accessToken) {
+          const registeredUser = res.data.user || res.data.data || null;
           set({
-            user: res.data.user || res.data.data || null,
+            user: registeredUser,
             accessToken: res.data.accessToken,
             refreshToken: res.data.refreshToken,
             isAuthenticated: !!res.data.accessToken,
           });
-          if (res.data.accessToken) {
-            connectSocket(res.data.accessToken);
-          }
+          connectSocket(res.data.accessToken);
+          if (registeredUser?.id) connectMqtt(res.data.accessToken, registeredUser.id);
         }
         // Devolvemos la respuesta para que la UI sepa si pide verificación.
         return res.data;
@@ -67,14 +68,16 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (data: LoginInput) => {
         const res = await api.post('/auth/login', data);
+        const loggedUser = res.data.user || res.data.data || null;
         set({
-          user: res.data.user || res.data.data || null,
+          user: loggedUser,
           accessToken: res.data.accessToken,
           refreshToken: res.data.refreshToken,
           isAuthenticated: true,
         });
         if (res.data.accessToken) {
           connectSocket(res.data.accessToken);
+          if (loggedUser?.id) connectMqtt(res.data.accessToken, loggedUser.id);
         }
       },
 
@@ -112,6 +115,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         disconnectSocket();
+        disconnectMqtt();
         set({
           user: null,
           accessToken: null,
@@ -134,6 +138,8 @@ export const useAuthStore = create<AuthState>()(
           });
           if (res.data.accessToken) {
             connectSocket(res.data.accessToken);
+            const { user } = get();
+            if (user?.id) connectMqtt(res.data.accessToken, user.id);
           }
         } catch (error: any) {
           const status = error?.response?.status;
@@ -187,5 +193,6 @@ if (typeof window !== 'undefined') {
       refreshToken: detail?.refreshToken || current.refreshToken,
     });
     connectSocket(accessToken);
+    if (current.user?.id) connectMqtt(accessToken, current.user.id);
   });
 }

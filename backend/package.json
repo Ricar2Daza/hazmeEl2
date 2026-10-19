@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",
+    "aedes": "^1.2.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -29,6 +30,7 @@
     "nodemailer": "^10.1.2",
     "socket.io": "^4.7.5",
     "swagger-ui-express": "^5.0.1",
+    "ws": "^8.22.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -39,6 +41,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.5.4",
     "@types/swagger-ui-express": "^4.1.6",
+    "@types/ws": "^8.18.2",
     "prisma": "^5.19.0",
     "socket.io-client": "^4.8.4",
     "ts-node": "^10.9.2",

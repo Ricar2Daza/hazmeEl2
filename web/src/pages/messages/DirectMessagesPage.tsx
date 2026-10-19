@@ -5,6 +5,8 @@ import { ArrowLeft, Search, Send, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { directApi } from '@/lib/axios';
 import { onSocketEvent } from '@/lib/socket';
+import { onMqttTopic, publishMqtt, topics } from '@/lib/mqtt';
+import { postReceipt } from '@/lib/receipts';
 import { useAuthStore } from '@/store/authStore';
 
 interface DirectMessage {
@@ -13,6 +15,8 @@ interface DirectMessage {
   senderId: string;
   content: string;
   createdAt: string;
+  deliveredAt?: string | null;
+  readAt?: string | null;
   sender?: { id: string; fullName: string };
 }
 
@@ -29,7 +33,10 @@ export default function DirectMessagesPage() {
   const user = useAuthStore((state) => state.user);
   const [content, setContent] = useState('');
   const [search, setSearch] = useState('');
+  const [peerTyping, setPeerTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const typingTimerRef = useRef<number | null>(null);
+  const lastTypingSentRef = useRef(0);
 
   const conversationsQuery = useQuery({
     queryKey: ['directConversations'],
@@ -63,6 +70,53 @@ export default function DirectMessagesPage() {
     });
   }, [conversationId, queryClient]);
 
+  // Pub/sub MQTT por tópico: transporte paralelo al socket para mensajes,
+  // recibos y tipado. Invalidar es idempotente, así que la doble llegada
+  // (socket + MQTT) sólo garantiza que algo llegue aunque caiga uno de los dos.
+  useEffect(() => {
+    if (!conversationId) return;
+    const offMessages = onMqttTopic(topics.messages(conversationId), (_topic, payload) => {
+      if (payload?.type !== 'message') return;
+      queryClient.invalidateQueries({ queryKey: ['directMessages', conversationId] });
+      queryClient.invalidateQueries({ queryKey: ['directConversations'] });
+    });
+    const offReceipts = onMqttTopic(topics.receipts(conversationId), (_topic, payload) => {
+      if (payload?.type !== 'receipt') return;
+      queryClient.invalidateQueries({ queryKey: ['directMessages', conversationId] });
+    });
+    return () => {
+      offMessages();
+      offReceipts();
+    };
+  }, [conversationId, queryClient]);
+
+  // Indicador efímero de "escribiendo..." del interlocutor (no se persiste:
+  // QoS 0, sin retain, y el otro lado lo oculta a los 3,5 s sin eventos).
+  useEffect(() => {
+    if (!conversationId) return;
+    const offTyping = onMqttTopic(topics.typing(conversationId), (_topic, payload) => {
+      if (!payload || payload.userId === user?.id) return;
+      setPeerTyping(true);
+      if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = window.setTimeout(() => setPeerTyping(false), 3500);
+    });
+    return () => {
+      offTyping();
+      if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+      setPeerTyping(false);
+    };
+  }, [conversationId, user?.id]);
+
+  // Recibo de lectura: el hilo está abierto y quedan mensajes del otro sin
+  // marcar. El servidor lo confirma publicando el tópico de recibos.
+  useEffect(() => {
+    if (!conversationId || !messagesQuery.data) return;
+    const hasUnread = messagesQuery.data.some(
+      (message) => message.senderId !== user?.id && !message.readAt
+    );
+    if (hasUnread) postReceipt('direct', conversationId, 'read');
+  }, [conversationId, messagesQuery.data, user?.id]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messagesQuery.data]);
@@ -90,6 +144,23 @@ export default function DirectMessagesPage() {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
     }
+  };
+
+  // Publica el indicador de tipado como máximo una vez cada 1,2 s (evento
+  // efímero: el receptor lo refresca mientras siga llegando).
+  const handleComposerChange = (value: string) => {
+    setContent(value);
+    if (!conversationId || !user?.id) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1200) return;
+    lastTypingSentRef.current = now;
+    publishMqtt(topics.typing(conversationId), {
+      type: 'typing',
+      chatId: conversationId,
+      userId: user.id,
+      fullName: user.fullName,
+      at: now,
+    });
   };
 
   const messages = messagesQuery.data || [];
@@ -214,6 +285,11 @@ export default function DirectMessagesPage() {
                 >
                   Ver perfil
                 </Link>
+                {peerTyping && (
+                  <p data-testid="peer-typing" className="mt-0.5 truncate text-xs italic text-accent-500">
+                    Escribiendo…
+                  </p>
+                )}
               </div>
             </div>
           </header>
@@ -244,6 +320,14 @@ export default function DirectMessagesPage() {
                           minute: '2-digit',
                         })}
                       </time>
+                      {own && Boolean(message.readAt || message.deliveredAt) && (
+                        <span
+                          data-testid="message-receipt"
+                          className="mt-0.5 block text-right text-[11px] text-white/70"
+                        >
+                          {message.readAt ? '✓✓ Leído' : '✓ Entregado'}
+                        </span>
+                      )}
                     </article>
                   </div>
                 );
@@ -263,7 +347,7 @@ export default function DirectMessagesPage() {
             <textarea
               id="direct-message-input"
               value={content}
-              onChange={(event) => setContent(event.target.value)}
+              onChange={(event) => handleComposerChange(event.target.value)}
               onKeyDown={handleComposerKeyDown}
               maxLength={2000}
               rows={2}

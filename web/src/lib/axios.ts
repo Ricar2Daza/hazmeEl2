@@ -226,6 +226,8 @@ export const chatApi = {
   messages: (applicationId: string) => api.get(`/chat/${applicationId}/messages`),
   send: (applicationId: string, content: string) =>
     api.post(`/chat/${applicationId}/messages`, { content }),
+  receipts: (applicationId: string, state: 'delivered' | 'read') =>
+    api.post(`/chat/${applicationId}/receipts`, { state }),
 };
 
 /** Mensajería directa entre usuarios (sin postulación de por medio). */
@@ -235,6 +237,8 @@ export const directApi = {
   messages: (conversationId: string) => api.get(`/direct/conversations/${conversationId}/messages`),
   send: (conversationId: string, content: string) =>
     api.post(`/direct/conversations/${conversationId}/messages`, { content }),
+  receipts: (conversationId: string, state: 'delivered' | 'read') =>
+    api.post(`/direct/conversations/${conversationId}/receipts`, { state }),
 };
 
 /** Valoraciones de usuarios (reputación). */

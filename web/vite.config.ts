@@ -25,6 +25,13 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
       },
+      // Broker MQTT embebido en el backend (Aedes) — mismo origen que la app,
+      // así apps nativas y web usan la URL pública con /mqtt.
+      '/mqtt': {
+        target: 'http://localhost:3000',
+        ws: true,
+        changeOrigin: true,
+      },
     },
   },
 });

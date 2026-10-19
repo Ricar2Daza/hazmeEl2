@@ -14,6 +14,11 @@ const sendMessageSchema = z.object({
   }),
 });
 
+const receiptsSchema = z.object({
+  params: z.object({ applicationId: z.string().uuid() }),
+  body: z.object({ state: z.enum(['delivered', 'read']) }),
+});
+
 const listConversations = [
   authenticateJWT,
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -56,4 +61,22 @@ const sendMessage = [
   },
 ];
 
-export default { listConversations, listMessages, sendMessage };
+/** Confirma entrega (delivered) o lectura (read) de los mensajes recibidos. */
+const updateReceipts = [
+  authenticateJWT,
+  validate(receiptsSchema),
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const data = await chatService.updateReceipts(
+        req.params.applicationId,
+        req.user!.id,
+        req.body.state
+      );
+      res.status(200).json({ status: 'success', data });
+    } catch (err) {
+      next(err);
+    }
+  },
+];
+
+export default { listConversations, listMessages, sendMessage, updateReceipts };

@@ -3,6 +3,7 @@ import prisma from '../utils/prisma';
 import { AppError } from '../utils/AppError';
 import { normalizeMessageContent } from '../utils/chatMessage';
 import { emitToUser } from '../utils/socket';
+import { publishMqtt, topics } from '../mqtt/broker';
 
 const USER_SELECT = {
   id: true,
@@ -122,5 +123,69 @@ export const sendMessage = async (conversationId: string, userId: string, conten
   emitToUser(userId, 'direct_message', payload);
   emitToUser(otherUserId, 'direct_message', payload);
 
+  // Pub/Sub MQTT: el hilo recibe el mensaje por tópico y la bandeja del
+  // receptor (y de los otros dispositivos del emisor) por su inbox propio.
+  const mqttPayload = {
+    type: 'message',
+    kind: 'direct',
+    chatId: conversationId,
+    message: payload,
+    at: new Date().toISOString(),
+  };
+  publishMqtt(topics.messages(conversationId), mqttPayload);
+  publishMqtt(topics.inbox(userId), mqttPayload);
+  publishMqtt(topics.inbox(otherUserId), mqttPayload);
+
   return payload;
+};
+
+export type ReceiptState = 'delivered' | 'read';
+
+/**
+ * Recibos de entrega/lectura de los mensajes AJENOS de un hilo.
+ * Idempotente: sólo marca los que aún no tienen ese estado y sólo en ese caso
+ * publica el evento de recibos (QoS 1) por el tópico del chat y por socket.
+ */
+export const updateReceipts = async (
+  conversationId: string,
+  userId: string,
+  state: ReceiptState
+): Promise<{ state: ReceiptState; updated: number }> => {
+  const conversation = await findParticipantConversation(conversationId, userId);
+  const otherUserId = conversation.userAId === userId ? conversation.userBId : conversation.userAId;
+
+  const pending = await prisma.directMessage.findMany({
+    where: {
+      conversationId,
+      senderId: { not: userId },
+      ...(state === 'read'
+        ? { OR: [{ deliveredAt: null }, { readAt: null }] }
+        : { deliveredAt: null }),
+    },
+    select: { id: true },
+  });
+
+  if (!pending.length) {
+    return { state, updated: 0 };
+  }
+
+  const now = new Date();
+  await prisma.directMessage.updateMany({
+    where: { id: { in: pending.map((m) => m.id) } },
+    data: state === 'read' ? { deliveredAt: now, readAt: now } : { deliveredAt: now },
+  });
+
+  const receipt = {
+    type: 'receipt',
+    kind: 'direct',
+    chatId: conversationId,
+    readerId: userId,
+    state,
+    messageIds: pending.map((m) => m.id),
+    at: now.toISOString(),
+  };
+  publishMqtt(topics.receipts(conversationId), receipt);
+  emitToUser(otherUserId, 'message_receipts', receipt);
+
+  return { state, updated: pending.length };
 };

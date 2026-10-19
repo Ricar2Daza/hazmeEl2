@@ -19,6 +19,8 @@ import {
 import { useAuthStore } from '@/store/authStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { connectSocket, onSocketEvent, getSocket } from '@/lib/socket';
+import { connectMqtt, onMqttTopic, topics } from '@/lib/mqtt';
+import { postReceipt } from '@/lib/receipts';
 import Logo from '@/components/ui/Logo';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 
@@ -61,8 +63,25 @@ export default function AppLayout() {
       if (!getSocket()?.connected) {
         connectSocket(accessToken);
       }
+      // Broker MQTT (mismo backend): la web usa Socket.io para avisos y MQTT
+      // para pub/sub de chats (mensajes, tipado y recibos). Idempotente.
+      if (user?.id) connectMqtt(accessToken, user.id);
     }
-  }, [isAuthenticated, accessToken]);
+  }, [isAuthenticated, accessToken, user?.id]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    // Buzón MQTT personal: en cuanto el dispositivo recibe un mensaje (aunque
+    // la conversación no esté abierta) confirma la entrega al servidor.
+    return onMqttTopic(topics.inbox(user.id), (_topic, payload) => {
+      if (payload?.type !== 'message' || !payload?.chatId) return;
+      if (payload.message?.senderId === user.id) return; // eco de mis envíos
+      postReceipt(payload.kind === 'chat' ? 'chat' : 'direct', payload.chatId, 'delivered');
+      queryClient.invalidateQueries({ queryKey: ['directConversations'] });
+      queryClient.invalidateQueries({ queryKey: ['chatConversations'] });
+    });
+  }, [isAuthenticated, user?.id, queryClient]);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) return;

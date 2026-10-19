@@ -5,6 +5,8 @@ import { ArrowLeft, MessageSquare, Search, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { chatApi } from '@/lib/axios';
 import { getSocket, onSocketEvent } from '@/lib/socket';
+import { onMqttTopic, publishMqtt, topics } from '@/lib/mqtt';
+import { postReceipt } from '@/lib/receipts';
 import { useAuthStore } from '@/store/authStore';
 
 interface ChatMessage {
@@ -13,6 +15,8 @@ interface ChatMessage {
   senderId: string;
   content: string;
   createdAt: string;
+  deliveredAt?: string | null;
+  readAt?: string | null;
 }
 
 interface Conversation {
@@ -34,8 +38,11 @@ export default function ChatPage() {
   const user = useAuthStore((state) => state.user);
   const [content, setContent] = useState('');
   const [search, setSearch] = useState('');
+  const [peerTyping, setPeerTyping] = useState(false);
   const [socketConnected, setSocketConnected] = useState(getSocket()?.connected ?? false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const typingTimerRef = useRef<number | null>(null);
+  const lastTypingSentRef = useRef(0);
 
   const conversationsQuery = useQuery({
     queryKey: ['chatConversations'],
@@ -66,6 +73,50 @@ export default function ChatPage() {
       }
     });
   }, [applicationId, queryClient]);
+
+  // Pub/sub MQTT por tópico (mismos eventos que el socket): mensajes,
+  // recibos y tipado del hilo de esta postulación.
+  useEffect(() => {
+    if (!applicationId) return;
+    const offMessages = onMqttTopic(topics.messages(applicationId), (_topic, payload) => {
+      if (payload?.type !== 'message') return;
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', applicationId] });
+      queryClient.invalidateQueries({ queryKey: ['chatConversations'] });
+    });
+    const offReceipts = onMqttTopic(topics.receipts(applicationId), (_topic, payload) => {
+      if (payload?.type !== 'receipt') return;
+      queryClient.invalidateQueries({ queryKey: ['chatMessages', applicationId] });
+    });
+    return () => {
+      offMessages();
+      offReceipts();
+    };
+  }, [applicationId, queryClient]);
+
+  // Indicador efímero de "escribiendo..." del interlocutor.
+  useEffect(() => {
+    if (!applicationId) return;
+    const offTyping = onMqttTopic(topics.typing(applicationId), (_topic, payload) => {
+      if (!payload || payload.userId === user?.id) return;
+      setPeerTyping(true);
+      if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = window.setTimeout(() => setPeerTyping(false), 3500);
+    });
+    return () => {
+      offTyping();
+      if (typingTimerRef.current) window.clearTimeout(typingTimerRef.current);
+      setPeerTyping(false);
+    };
+  }, [applicationId, user?.id]);
+
+  // Recibo de lectura con el hilo abierto (idempotente en el servidor).
+  useEffect(() => {
+    if (!applicationId || !messagesQuery.data) return;
+    const hasUnread = messagesQuery.data.some(
+      (message) => message.senderId !== user?.id && !message.readAt
+    );
+    if (hasUnread) postReceipt('chat', applicationId, 'read');
+  }, [applicationId, messagesQuery.data, user?.id]);
 
   useEffect(() => {
     // onSocketEvent engancha el listener aunque el socket todavía no exista
@@ -124,6 +175,22 @@ export default function ChatPage() {
       event.preventDefault();
       event.currentTarget.form?.requestSubmit();
     }
+  };
+
+  // Publica el indicador de tipado como máximo una vez cada 1,2 s.
+  const handleComposerChange = (value: string) => {
+    setContent(value);
+    if (!applicationId || !user?.id) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1200) return;
+    lastTypingSentRef.current = now;
+    publishMqtt(topics.typing(applicationId), {
+      type: 'typing',
+      chatId: applicationId,
+      userId: user.id,
+      fullName: user.fullName,
+      at: now,
+    });
   };
 
   return (
@@ -206,6 +273,11 @@ export default function ChatPage() {
                 <div className="min-w-0">
                   <h2 className="truncate font-semibold text-ink">{peer}</h2>
                   <p className="mt-1 truncate text-sm text-muted">{conversation.job.title}</p>
+                  {peerTyping && (
+                    <p data-testid="peer-typing" className="mt-0.5 truncate text-xs italic text-accent-500">
+                      Escribiendo…
+                    </p>
+                  )}
                 </div>
               </div>
               <span className="shrink-0 text-xs text-muted">
@@ -228,6 +300,14 @@ export default function ChatPage() {
                     <time className={`mt-1 block text-right text-[11px] ${own ? 'text-white/70' : 'text-muted'}`}>
                       {new Date(message.createdAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}
                     </time>
+                    {own && Boolean(message.readAt || message.deliveredAt) && (
+                      <span
+                        data-testid="message-receipt"
+                        className="mt-0.5 block text-right text-[11px] text-white/70"
+                      >
+                        {message.readAt ? '✓✓ Leído' : '✓ Entregado'}
+                      </span>
+                    )}
                   </article>
                 </div>
               );
@@ -241,7 +321,7 @@ export default function ChatPage() {
             <textarea
               id="chat-message"
               value={content}
-              onChange={(event) => setContent(event.target.value)}
+              onChange={(event) => handleComposerChange(event.target.value)}
               onKeyDown={handleComposerKeyDown}
               maxLength={2000}
               rows={2}

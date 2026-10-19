@@ -71,3 +71,6 @@ Thumbs.db
 # TypeScript cache
 # ==============================
 *.tsbuildinfo
+
+# Binario de ngrok copiado a la raiz por error (el real vive en facesmash)
+/ngrok.exe

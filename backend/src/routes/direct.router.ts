@@ -7,5 +7,6 @@ router.get('/conversations', directController.list);
 router.post('/conversations', directController.start);
 router.get('/conversations/:conversationId/messages', directController.listMessages);
 router.post('/conversations/:conversationId/messages', directController.sendMessage);
+router.post('/conversations/:conversationId/receipts', directController.updateReceipts);
 
 export default router;
